@@ -1,25 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/src/templates/server/server.ftl" line="67" />
+    <bookmark url="file://$PROJECT_DIR$/src/templates/server/server.ftl" line="68" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b04dc599-da1c-4be2-9a39-99302a22fc2b" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/java-json.jar" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/lib/json-simple-1.1.1.jar" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/main/Entity.java" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/templates/control.ftl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/templates/footer.ftl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/templates/head.ftl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/templates/header.ftl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/templates/scripts.ftl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/templates/server/index.ftl" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/src/templates/sidebar.ftl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/Main.java" afterPath="$PROJECT_DIR$/src/main/Main.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/server/server.ftl" afterPath="$PROJECT_DIR$/src/templates/server/server.ftl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/utils/server.json" afterPath="$PROJECT_DIR$/src/utils/server.json" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -110,8 +96,8 @@
       <file leaf-file-name="server.ftl" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/templates/server/server.ftl">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="191">
-              <caret line="45" column="68" lean-forward="false" selection-start-line="45" selection-start-column="68" selection-end-line="45" selection-end-column="68" />
+            <state relative-caret-position="259">
+              <caret line="49" column="36" lean-forward="false" selection-start-line="49" selection-start-column="36" selection-end-line="49" selection-end-column="36" />
               <folding>
                 <element signature="n#style#0;n#span#1;n#div#0;n#div#0;n#div#0;n#div#1;n#div#0;n#div#0;n#div#0;n#section#1;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
               </folding>
@@ -761,12 +747,12 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1498039830560</updated>
-      <workItem from="1498039831867" duration="14246000" />
+      <workItem from="1498039831867" duration="14681000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="14246000" />
+    <option name="totallyTimeSpent" value="14681000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="0" width="1378" height="744" extended-state="0" />
@@ -980,8 +966,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/templates/server/server.ftl">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="191">
-          <caret line="45" column="68" lean-forward="false" selection-start-line="45" selection-start-column="68" selection-end-line="45" selection-end-column="68" />
+        <state relative-caret-position="259">
+          <caret line="49" column="36" lean-forward="false" selection-start-line="49" selection-start-column="36" selection-end-line="49" selection-end-column="36" />
           <folding>
             <element signature="n#style#0;n#span#1;n#div#0;n#div#0;n#div#0;n#div#1;n#div#0;n#div#0;n#div#0;n#section#1;n#div#0;n#div#0;n#body#0;n#html#0;n#!!top" expanded="true" />
           </folding>
