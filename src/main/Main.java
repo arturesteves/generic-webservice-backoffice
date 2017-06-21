@@ -197,6 +197,8 @@ public class Main {
 
             Map<String, Object> model = new HashMap<>();
             model.put("servers", servers.get("servers"));
+            model.put("host", host);
+            model.put("server", server);
             model.put("entities", entities);
 
             return engine.render(model, "server/server.ftl");
