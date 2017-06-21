@@ -3,8 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Server</title>
+    <title>Home</title>
     <#include "../head.ftl">
+
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
 <div class="wrapper">
@@ -13,7 +14,7 @@
 
     <#include "../sidebar.ftl">
 
-    <!-- Content Wrapper. Contains page content -->
+        <!-- Content Wrapper. Contains page content -->
     <div class="content-wrapper">
         <!-- Content Header (Page header) -->
         <section class="content-header">
@@ -32,25 +33,25 @@
 
                     <div class="box">
                         <div class="box-header">
-                            <h3 class="box-title">Entities</h3>
+                            <h3 class="box-title">Servers</h3>
                         </div>
                         <!-- /.box-header -->
                         <div class="box-body">
 
-                        <#list entities as entity>
+                            <#list servers as server>
                             <div class="col-md-3 col-sm-6 col-xs-12">
                                 <div class="info-box">
-                                    <span class="info-box-icon bg-aqua"><i class="fa fa-cube"></i></span>
+                                    <span class="info-box-icon bg-aqua"><i class="fa fa-server"></i></span>
 
                                     <div class="info-box-content">
-                                        <span class="info-box-text">${entity.name}</span>
-                                        <span style="color: rgba(32, 32, 32, 0.76);">${entity.instanceCount}</span>
+                                        <span class="info-box-text">Server ${server.name}</span>
+                                        <span style="color: rgba(32, 32, 32, 0.76);">${server.description}</span>
                                     </div>
                                     <!-- /.info-box-content -->
                                 </div>
                                 <!-- /.info-box -->
                             </div>
-                        </#list>
+                            </#list>
                         </div>
                         <!-- /.box-body -->
                     </div>
@@ -64,10 +65,11 @@
     </div>
     <!-- /.content-wrapper -->
 
-    <#include "../footer.ftl">
-    <#include "../control.ftl">
+
+<#include "../footer.ftl">
+<#include "../control.ftl">
 
 </div>
-    <#include "../scripts.ftl">
+<#include "../scripts.ftl">
 </body>
 </html>

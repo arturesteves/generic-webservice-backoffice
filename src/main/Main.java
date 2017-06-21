@@ -5,25 +5,24 @@
 
 package main;
 
+import com.google.gson.JsonParser;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import utils.FreemarkerEngine;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Date;
+import java.util.*;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -68,45 +67,96 @@ public class Main {
         return null;
     }
 
-    private static JSONArray getServers() {
-        return (JSONObject) parser.parse(new FileReader("/utils/server.json"));
+    private static JSONObject getServers() {
+
+        JSONParser parser = new JSONParser();
+        try {
+            return (JSONObject) parser.parse(new FileReader(System.getProperty("user.dir") + "/src/utils/server.json"));
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+
     }
 
     private static void addServer(Server server) {
-        JSONObject object = (JSONObject)parser.parse(new FileReader("/utils/server.json"));
-        JSONArray servers = (JSONArray)object.get("servers");
-        servers.add(server);
+        JSONParser parser = new JSONParser();
+        try {
+            JSONObject object = (JSONObject)parser.parse(new FileReader(System.getProperty("user.dir") + "/src/utils/server.json"));
+            JSONArray servers = (JSONArray)object.get("servers");
+            servers.add(server);
+            //todo -- save in file
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private static void removeServer(String name) {
-        JSONObject object = (JSONObject)parser.parse(new FileReader("/utils/server.json"));
-        JSONArray servers = (JSONArray)object.get("servers");
-        Iterator iterator = servers.iterator();
-        while(iterator.hasNext()) {
-            if(iterator.next().get(name).getName().equals(name)){
-                iterator.remove();
-                return;
+        JSONParser parser = new JSONParser();
+        try {
+            JSONObject object = (JSONObject)parser.parse(new FileReader(System.getProperty("user.dir") + "/src/utils/server.json"));
+            JSONArray servers = (JSONArray)object.get("servers");
+            int indexToRemove = -1;
+            for(int i = 0; i<servers.size(); i++) {
+                if(((Server)servers.get(i)).getName().equals(name)){
+                    indexToRemove = i;
+                }
             }
+
+            if(indexToRemove != -1) {
+                servers.remove(indexToRemove);
+            }
+
+            //todo -- save in file
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+
     }
 
     private static String getServerHost(String name) {
-        JSONObject object = (JSONObject)parser.parse(new FileReader("/utils/server.json"));
-        JSONArray servers = (JSONArray)object.get("servers");
-        Iterator iterator = servers.iterator();
-        while(iterator.hasNext()) {
-            Server server = (Server)iterator.next();
-            if(iterator.next().get(name).getName().equals(name)){
-                return server.getHost();
+        JSONParser parser = new JSONParser();
+        try {
+            JSONObject object = (JSONObject)parser.parse(new FileReader(System.getProperty("user.dir") + "/src/utils/server.json"));
+            JSONArray servers = (JSONArray)object.get("servers");
+            int index = -1;
+            for(int i = 0; i<servers.size(); i++) {
+                if(((JSONObject)servers.get(i)).get("name").equals(name)){
+                    index = i;
+                }
             }
+
+            if(index != -1) {
+                return (String)((JSONObject)servers.get(index)).get("host");
+            }
+
+            //todo -- save in file
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
         return null;
+
     }
 
     public static void main(String[] args) {
 
         // Configure Spark
-        port(8000);
+        port(3000);
         staticFiles.externalLocation("src/resources");
 
 
@@ -117,24 +167,47 @@ public class Main {
 
         get("/", (request, response) -> {
             try {
-                JSONObject server = getServers();
-                return engine.render(server, "server/server.ftl");
+                JSONObject model = getServers();
+                return engine.render(model, "server/index.ftl");
             } catch (Exception e) {
                 e.printStackTrace();
+                response.status(500);
+                return gson.toJson("");
             }
         });
 
-        get("/server", (request, response) -> {
-            JSONObject server = getServers();
-            return engine.render(server, "server/server.ftl");
+        get("/server/:server", (request, response) -> {
+            JSONObject servers = getServers();
+            String server = request.params("server");
+
+            //todo receive server
+            String host = getServerHost(server);
+            if(host == null) {
+                //todo - redirect to not found
+                response.status(404);
+                return gson.toJson("Not found");
+            }
+
+            //Get the server entities
+            String jsonEntityList = Main.request(host + "/api/entity", "");
+
+            //Parse the attributes json
+            Type typeEntityList = new TypeToken<List<Entity>>() {}.getType();
+            List<Entity> entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("servers", servers.get("servers"));
+            model.put("entities", entities);
+
+            return engine.render(model, "server/server.ftl");
         });
 
         get("/server/add", (request, response) -> {
             JSONObject server = getServers();
-            return engine.render(server, "server/server.ftl");
+            return engine.render(server, "server/add.ftl");
         });
 
-        post("/server/add"), (request, response) -> {
+        post("/server/add", (request, response) -> {
             Type type = new TypeToken<Map<String, String>>(){}.getType();
             Map<String, String> map = gson.fromJson(request.body(), type);
             String serverName = map.get("name");
@@ -142,21 +215,24 @@ public class Main {
             //Todo - validate if the server doesn't already exists
             Server server = new Server(serverName, serverHost);
             Main.addServer(server);
+            response.status(200);
+            return gson.toJson("success");
         });
 
         get("/server/remove", (request, response) -> {
-            JSONObject server = getServers();
-            return engine.render(server, "server/server.ftl");
+            JSONObject model = getServers();
+            return engine.render(model, "server/remove.ftl");
         });
 
-        post("/server/remove"), (request, response) -> {
+        post("/server/remove", (request, response) -> {
             Type type = new TypeToken<Map<String, String>>(){}.getType();
             Map<String, String> map = gson.fromJson(request.body(), type);
             String serverName = map.get("name");
             Main.removeServer(serverName);
+            response.status(200);
+            return gson.toJson("success");
         });
 
-        //Entity instance edit
         get("/server/:server/entity/:entity", (request, response) -> {
             //Get the params from the request
             String server = request.params("server");
@@ -169,12 +245,12 @@ public class Main {
             }
 
             //Get the attributes of the entity
-            String jsonAttributeList = Main.request(host + "/api/model/" + modelName +
-                    "/entity/" + entityId + "/attributes" , "");
+            String jsonAttributeList = Main.request(host + "/api/entity/" + entity +
+                    "/attributes" , "");
 
             //Get the instances of the entity
-            String jsonInstanceList = Main.request(host + "/api/model/" + modelName +
-                    "/entity/" + entityId + "/list" , "");
+            String jsonInstanceList = Main.request(host + "/api/entity/" + entity +
+                    "/instance/" , "");
 
             //Parse the attributes json
             Type typeAttributesList = new TypeToken<List<Attribute>>() {}.getType();
@@ -189,7 +265,7 @@ public class Main {
             model.put("attributes", attributes);
             model.put("instances", instances);
 
-            return engine.render(model, "list.html");
+            return engine.render(model, "entity/entity.html");
         });
 
         //Instance information and edit page
@@ -206,25 +282,25 @@ public class Main {
             }
 
             //Get the attributes of the entity
-            String jsonAttributeList = Main.request(host + "/api/model/" + modelName +
-                    "/entity/" + entityId + "/attributes" , "");
+            String jsonAttributeList = Main.request(host + "/api/entity/" + entity +
+                    "/attributes" , "");
 
             //Get the instances of the entity
-            String jsonInstance = Main.request(host + "/api/model/" + modelName +
-                    "/entity/" + entityId + "/instance/" + instance , "");
+            String jsonInstance = Main.request(host + "/api/entity/" + entity +
+                    "/instance/" + instance , "");
 
             //Parse the attributes json
             Type typeAttributesList = new TypeToken<List<Attribute>>() {}.getType();
             List<Attribute> attributes = Main.gson.fromJson(request.body(), typeAttributesList);
 
             //Parse the the instances json
-            Type typeInstance = new TypeToken<<Map<String, String>>() {}.getType();
-            Map<String, String> instance = gson.fromJson(request.body(), typeInstance);
+            Type typeInstance = new TypeToken<Map<String, String>>() {}.getType();
+            Map<String, String> instanceMap = gson.fromJson(request.body(), typeInstance);
 
             Map<String, Object> model = new HashMap<>();
             model.put("host", host);
             model.put("attributes", attributes);
-            model.put("instance", instance);
+            model.put("instance", instanceMap);
 
             return engine.render(model, "instance/instance.ftl");
         });
@@ -243,8 +319,12 @@ public class Main {
             }
 
             //Get the attributes of the entity
-            String jsonAttributeList = Main.request(host + "/api/model/" + modelName +
-                    "/entity/" + entityId + "/attributes" , "");
+            String jsonAttributeList = Main.request(host + "/api/entity/" + entity +
+                    "/attributes" , "");
+
+            //Parse the attributes json
+            Type typeAttributesList = new TypeToken<List<Attribute>>() {}.getType();
+            List<Attribute> attributes = Main.gson.fromJson(request.body(), typeAttributesList);
 
             Map<String, Object> model = new HashMap<>();
             model.put("host", host);
