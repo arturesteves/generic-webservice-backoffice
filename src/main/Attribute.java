@@ -5,20 +5,20 @@ package main;
  */
 public class Attribute {
 
-    private String Attribute;
+    private String attribute;
     private String type;
 
     public Attribute(String Attribute, String type) {
-        this.Attribute = Attribute;
+        this.attribute = Attribute;
         this.type = type;
     }
 
     public String getAttribute() {
-        return Attribute;
+        return attribute;
     }
 
     public void setAttribute(String attribute) {
-        this.Attribute = attribute;
+        this.attribute = attribute;
     }
 
     public String getType() {

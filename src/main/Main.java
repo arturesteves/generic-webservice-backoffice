@@ -29,13 +29,15 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 import static spark.Spark.*;
+
 /*
 todo - The server must provide a way to persist the servers hosts maybe in a json file
  */
 public class Main {
 
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static String request(String url, String params){
+
+    private static String request(String url, String params) {
 
         try {
             URL obj = new URL(url);
@@ -66,6 +68,40 @@ public class Main {
         return null;
     }
 
+    private static JSONArray getServers() {
+        return (JSONObject) parser.parse(new FileReader("/utils/server.json"));
+    }
+
+    private static void addServer(Server server) {
+        JSONObject object = (JSONObject)parser.parse(new FileReader("/utils/server.json"));
+        JSONArray servers = (JSONArray)object.get("servers");
+        servers.add(server);
+    }
+
+    private static void removeServer(String name) {
+        JSONObject object = (JSONObject)parser.parse(new FileReader("/utils/server.json"));
+        JSONArray servers = (JSONArray)object.get("servers");
+        Iterator iterator = servers.iterator();
+        while(iterator.hasNext()) {
+            if(iterator.next().get(name).getName().equals(name)){
+                iterator.remove();
+                return;
+            }
+        }
+    }
+
+    private static String getServerHost(String name) {
+        JSONObject object = (JSONObject)parser.parse(new FileReader("/utils/server.json"));
+        JSONArray servers = (JSONArray)object.get("servers");
+        Iterator iterator = servers.iterator();
+        while(iterator.hasNext()) {
+            Server server = (Server)iterator.next();
+            if(iterator.next().get(name).getName().equals(name)){
+                return server.getHost();
+            }
+        }
+        return null;
+    }
 
     public static void main(String[] args) {
 
@@ -75,11 +111,98 @@ public class Main {
 
 
         // Configure freemarker engine
-        FreemarkerEngine engine = new FreemarkerEngine("src/bookstore");
+        FreemarkerEngine engine = new FreemarkerEngine("src/templates");
 
-   //     DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        //     DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
-        Main.request("https://jsonplaceholder.typicode.com/posts/1", "");
+        get("/", (request, response) -> {
+            try {
+                JSONObject server = getServers();
+                return engine.render(server, "server/server.ftl");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        get("/server", (request, response) -> {
+            JSONObject server = getServers();
+            return engine.render(server, "server/server.ftl");
+        });
+
+        get("/server/add", (request, response) -> {
+            JSONObject server = getServers();
+            return engine.render(server, "server/server.ftl");
+        });
+
+        post("/server/add"), (request, response) -> {
+            Type type = new TypeToken<Map<String, String>>(){}.getType();
+            Map<String, String> map = gson.fromJson(request.body(), type);
+            String serverName = map.get("name");
+            String serverHost = map.get("host");
+            //Todo - validate if the server doesn't already exists
+            Server server = new Server(serverName, serverHost);
+            Main.addServer(server);
+        });
+
+        get("/server/remove", (request, response) -> {
+            JSONObject server = getServers();
+            return engine.render(server, "server/server.ftl");
+        });
+
+        post("/server/remove"), (request, response) -> {
+            Type type = new TypeToken<Map<String, String>>(){}.getType();
+            Map<String, String> map = gson.fromJson(request.body(), type);
+            String serverName = map.get("name");
+            Main.removeServer(serverName);
+        });
+
+        get("/server/:server/entity/:entity", (request, response) -> {
+            //Get the params from the request
+            String server = request.params("server");
+            String entity = request.params("entity");
+
+            String host = getServerHost(server);
+            if(host == null) {
+                //todo - redirect to not found
+            }
+
+            //Get the instances of the entity
+            String jsonInstanceList = Main.request("http://localhost/api/model/" + modelName +
+                    "/entity/" + entityId + "/list", "");
+
+            //Parse the attributes json
+            Type typeAttributesList = new TypeToken<List<Attribute>>() {
+            }.getType();
+            List<Attribute> attributes = Main.gson.fromJson(request.body(), typeAttributesList);
+
+            //Parse the the instances json
+            Type typeInstanceList = new TypeToken<List<Map<String, String>>>() {
+            }.getType();
+            List<Map<String, String>> instances = gson.fromJson(request.body(), typeAttributesList);
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("attributes", attributes);
+            model.put("instances", instances);
+
+            return engine.render(model, "list.html");
+        });
+
+        get("/server/:server/entity/:entity/instance/:instance", (request, response) -> {
+
+        });
+
+        get("/server/:server/entity/:entity/instance/:instance/add", (request, response) -> {
+
+        });
+
+        get("/server/:server/entity/:entity/instance/:instance/add", (request, response) -> {
+
+        });
+
+        get("/server/:server/entity/:entity/instance/:instance/edit", (request, response) -> {
+
+        });
+
 
         /**
          * Show the list of instances of certain entity of a model
@@ -89,59 +212,39 @@ public class Main {
          *
          * ]
          */
-        get("server/:server/model/:model/entity/:entity", (request, response) -> {
-            //Get the params from the requestn
-            String modelName = request.params("id");
-            String entityId = request.params("entity");
-            String serverId = request.params("server");
-
-            //Get the attributes of the entity
-            String jsonAttributeList = Main.request("http://localhost/api/model/" + modelName +
-                    "/entity/" + entityId + "/attributes" , "");
-
-            //Get the instances of the entity
-            String jsonInstanceList = Main.request("http://localhost/api/model/" + modelName +
-                    "/entity/" + entityId + "/list" , "");
-
-            //Parse the attributes json
-            Type typeAttributesList = new TypeToken<List<Attribute>>(){}.getType();
-            List<Attribute> attributes = Main.gson.fromJson(request.body(), typeAttributesList);
-
-            //Parse the the instances json
-            Type typeInstanceList = new TypeToken<List<Map<String, String>>>(){}.getType();
-            List<Map<String, String>> instances = gson.fromJson(request.body(), typeInstanceList);
-
-            Map<String, Object> model = new HashMap<>();
-            model.put("attributes", attributes);
-            model.put("instances", instances);
-
-            return engine.render(model, "list.html");
-        });
-
-        //todo - list all the entities available in the model
-        get("/model/:model", (request, response) -> {
-            //Get the params from the request
-            String modelName = request.params("id");
-            String entityId = request.params("entity");
-
-            //Get the instances of the entity
-            String jsonInstanceList = Main.request("http://localhost/api/model/" + modelName +
-                    "/entity/" + entityId + "/list" , "");
-
-            //Parse the attributes json
-            Type typeAttributesList = new TypeToken<List<Attribute>>(){}.getType();
-            List<Attribute> attributes = Main.gson.fromJson(request.body(), typeAttributesList);
-
-            //Parse the the instances json
-            Type typeInstanceList = new TypeToken<List<Map<String, String>>>(){}.getType();
-            List<Map<String, String>> instances = gson.fromJson(request.body(), typeAttributesList);
-
-            Map<String, Object> model = new HashMap<>();
-            model.put("attributes", attributes);
-            model.put("instances", instances);
-
-            return engine.render(model, "list.html");
-        });
+//        get("server/:server/model/:model/entity/:entity", (request, response) -> {
+//            //Get the params from the requestn
+//            String modelName = request.params("id");
+//            String entityId = request.params("entity");
+//            String serverId = request.params("server");
+//
+//            //Get the attributes of the entity
+//            String jsonAttributeList = Main.request("http://localhost/api/model/" + modelName +
+//                    "/entity/" + entityId + "/attributes" , "");
+//
+//            //Get the instances of the entity
+//            String jsonInstanceList = Main.request("http://localhost/api/model/" + modelName +
+//                    "/entity/" + entityId + "/list" , "");
+//
+//            //Parse the attributes json
+//            Type typeAttributesList = new TypeToken<List<Attribute>>(){}.getType();
+//            List<Attribute> attributes = Main.gson.fromJson(request.body(), typeAttributesList);
+//
+//            //Parse the the instances json
+//            Type typeInstanceList = new TypeToken<List<Map<String, String>>>(){}.getType();
+//            List<Map<String, String>> instances = gson.fromJson(request.body(), typeInstanceList);
+//
+//            Map<String, Object> model = new HashMap<>();
+//            model.put("attributes", attributes);
+//            model.put("instances", instances);
+//
+//            return engine.render(model, "list.html");
+//        });
+//
+//        //todo - list all the entities available in the model
+//        get("/model/:model", (request, response) -> {
+//
+//        });
 //
 //        // Set up endpoints
 //        get("/", (request, response) -> {
