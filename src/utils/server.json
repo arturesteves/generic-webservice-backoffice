@@ -4,11 +4,6 @@
       "name": "Localhost",
       "host": "http://localhost:8000",
       "description": "A localhost server for testing"
-    },
-    {
-      "name": "Localhost 2 - Simulation",
-      "host": "http://localhost:8000",
-      "description": "The same localhost server for testing"
     }
   ]
 }
