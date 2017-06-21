@@ -16,7 +16,6 @@
         <!-- sidebar menu: : style can be found in sidebar.less -->
         <ul class="sidebar-menu">
             <li class="header">MAIN NAVIGATION</li>
-
             <li class="treeview active">
                 <a href="#">
                     <i class="fa fa-server"></i> <span>Servers</span>
@@ -25,11 +24,13 @@
                 </span>
                 </a>
                 <ul class="treeview-menu">
+
+                <!-- list server menus -->
                 <#list servers as server>
                     <li class="treeview">
-                        <a href="#"> <!-- href="/server/${server.name}" -->
+                        <a href="#">
                             <i class="fa fa-globe"></i>
-                            ${server.name}
+                        ${server.name}
                             <#if server.entities??>
                                 <span class="pull-right-container">
                                 <i class="fa fa-angle-left pull-right"></i>
@@ -52,7 +53,6 @@
                 </#list>
                 </ul>
             </li>
-
         </ul>
     </section>
     <!-- /.sidebar -->

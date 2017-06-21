@@ -10,6 +10,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import spark.Response;
 import utils.FreemarkerEngine;
 
 import com.google.gson.Gson;
@@ -153,6 +154,34 @@ public class Main {
 
     }
 
+    private static Object getServersWithEntities(JSONObject jsonServers){
+        String server;
+        String host;
+        String jsonEntityList;
+        Type typeEntityList;
+        List<Entity> entities;
+
+        for(int i = 0; i < ((List) jsonServers.get("servers")).size(); i++){
+            server = (String) ((JSONObject) ((List) jsonServers.get("servers")).get(i)).get("name");
+            host = getServerHost(server);
+
+            if(host == null) {
+                throw new RuntimeException("Unreachable host");
+            }
+
+            // get entities
+            jsonEntityList = Main.request(host + "/api/entity", "");
+
+            //Parse the attributes json
+            typeEntityList = new TypeToken<List<Map<String,String>>>() {}.getType();
+            entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
+
+            ((JSONObject) ((List) jsonServers.get("servers")).get(i)).put("entities", entities);
+        }
+
+        return jsonServers.get("servers");
+    }
+
     public static void main(String[] args) {
 
         // Configure Spark
@@ -165,73 +194,57 @@ public class Main {
 
         //     DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
+
         get("/", (request, response) -> {
-            try {
                 Map<String, Object> model = new HashMap<>();
                 JSONObject jsonServers = getServers();
+                try{
+                    Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-                String server;
-                String host;
-                String jsonEntityList;
-                Type typeEntityList;
-                List<Entity> entities;
+                    model.put("servers", jsonServerWithEntities);
 
-                for(int i = 0; i < ((List) jsonServers.get("servers")).size(); i++){
-                    server = (String) ((JSONObject) ((List) jsonServers.get("servers")).get(i)).get("name");
-                    host = getServerHost(server);
+                    return engine.render(model, "server/index.ftl");
 
-                    if(host == null) {
-                        response.status(404);
-                        return gson.toJson("Not found");
-                    }
-
-                    // get entities
-                    jsonEntityList = Main.request(host + "/api/entity", "");
-
-                    //Parse the attributes json
-                    typeEntityList = new TypeToken<List<Map<String,String>>>() {}.getType();
-                    entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
-
-                    ((JSONObject) ((List) jsonServers.get("servers")).get(i)).put("entities", entities);
+                }catch(RuntimeException e){
+                    response.status(404);
+                    return gson.toJson(e.getMessage());
                 }
-
-
-                model.put("servers", jsonServers.get("servers"));
-
-                return engine.render(model, "server/index.ftl");
-                //return model;
-            } catch (Exception e) {
-                e.printStackTrace();
-                response.status(500);
-                return gson.toJson(e.getMessage());
-            }
         });
 
         get("/server/:server", (request, response) -> {
-            JSONObject servers = getServers();
+            JSONObject jsonServers = getServers();
             String server = request.params("server");
 
-            //todo receive server
-            String host = getServerHost(server);
-            if(host == null) {
-                //todo - redirect to not found
+            try{
+                Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+
+                //todo receive server
+                String host = getServerHost(server);
+                if(host == null) {
+                    //todo - redirect to not found
+                    response.status(404);
+                    return gson.toJson("Not found");
+                }
+
+                //Get the server entities
+                String jsonEntityList = Main.request(host + "/api/entity", "");
+
+                //Parse the attributes json
+                Type typeEntityList = new TypeToken<List<Entity>>() {}.getType();
+                List<Entity> entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
+
+
+                Map<String, Object> model = new HashMap<>();
+                model.put("servers", jsonServerWithEntities);
+                model.put("entities", entities);
+
+                return engine.render(model, "server/server.ftl");
+
+            }catch(RuntimeException e){
                 response.status(404);
-                return gson.toJson("Not found");
+                return gson.toJson(e.getMessage());
             }
 
-            //Get the server entities
-            String jsonEntityList = Main.request(host + "/api/entity", "");
-
-            //Parse the attributes json
-            Type typeEntityList = new TypeToken<List<Entity>>() {}.getType();
-            List<Entity> entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
-
-
-            Map<String, Object> model = new HashMap<>();
-            model.put("servers", servers.get("servers"));
-            model.put("entities", entities);
-
-            return engine.render(model, "server/server.ftl");
         });
 
         get("/server/add", (request, response) -> {
