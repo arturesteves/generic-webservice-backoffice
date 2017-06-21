@@ -156,6 +156,7 @@ public class Main {
             Main.removeServer(serverName);
         });
 
+        //Entity instance edit
         get("/server/:server/entity/:entity", (request, response) -> {
             //Get the params from the request
             String server = request.params("server");
@@ -164,144 +165,93 @@ public class Main {
             String host = getServerHost(server);
             if(host == null) {
                 //todo - redirect to not found
+                return null;
             }
 
+            //Get the attributes of the entity
+            String jsonAttributeList = Main.request(host + "/api/model/" + modelName +
+                    "/entity/" + entityId + "/attributes" , "");
+
             //Get the instances of the entity
-            String jsonInstanceList = Main.request("http://localhost/api/model/" + modelName +
-                    "/entity/" + entityId + "/list", "");
+            String jsonInstanceList = Main.request(host + "/api/model/" + modelName +
+                    "/entity/" + entityId + "/list" , "");
 
             //Parse the attributes json
-            Type typeAttributesList = new TypeToken<List<Attribute>>() {
-            }.getType();
+            Type typeAttributesList = new TypeToken<List<Attribute>>() {}.getType();
             List<Attribute> attributes = Main.gson.fromJson(request.body(), typeAttributesList);
 
             //Parse the the instances json
-            Type typeInstanceList = new TypeToken<List<Map<String, String>>>() {
-            }.getType();
-            List<Map<String, String>> instances = gson.fromJson(request.body(), typeAttributesList);
+            Type typeInstanceList = new TypeToken<List<Map<String, String>>>() {}.getType();
+            List<Map<String, String>> instances = gson.fromJson(request.body(), typeInstanceList);
 
             Map<String, Object> model = new HashMap<>();
+            model.put("host", host);
             model.put("attributes", attributes);
             model.put("instances", instances);
 
             return engine.render(model, "list.html");
         });
 
+        //Instance information and edit page
         get("/server/:server/entity/:entity/instance/:instance", (request, response) -> {
+            //Get the params from the request
+            String server = request.params("server");
+            String entity = request.params("entity");
+            String instance = request.params("instance");
 
+            String host = getServerHost(server);
+            if(host == null) {
+                //todo - redirect to not found
+                return null;
+            }
+
+            //Get the attributes of the entity
+            String jsonAttributeList = Main.request(host + "/api/model/" + modelName +
+                    "/entity/" + entityId + "/attributes" , "");
+
+            //Get the instances of the entity
+            String jsonInstance = Main.request(host + "/api/model/" + modelName +
+                    "/entity/" + entityId + "/instance/" + instance , "");
+
+            //Parse the attributes json
+            Type typeAttributesList = new TypeToken<List<Attribute>>() {}.getType();
+            List<Attribute> attributes = Main.gson.fromJson(request.body(), typeAttributesList);
+
+            //Parse the the instances json
+            Type typeInstance = new TypeToken<<Map<String, String>>() {}.getType();
+            Map<String, String> instance = gson.fromJson(request.body(), typeInstance);
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("host", host);
+            model.put("attributes", attributes);
+            model.put("instance", instance);
+
+            return engine.render(model, "instance/instance.ftl");
         });
 
+        //Instance adding page
         get("/server/:server/entity/:entity/instance/:instance/add", (request, response) -> {
+            //Get the params from the request
+            String server = request.params("server");
+            String entity = request.params("entity");
+            String instance = request.params("instance");
 
+            String host = getServerHost(server);
+            if(host == null) {
+                //todo - redirect to not found
+                return null;
+            }
+
+            //Get the attributes of the entity
+            String jsonAttributeList = Main.request(host + "/api/model/" + modelName +
+                    "/entity/" + entityId + "/attributes" , "");
+
+            Map<String, Object> model = new HashMap<>();
+            model.put("host", host);
+            model.put("attributes", attributes);
+
+            return engine.render(model, "instance/add.ftl");
         });
-
-        get("/server/:server/entity/:entity/instance/:instance/add", (request, response) -> {
-
-        });
-
-        get("/server/:server/entity/:entity/instance/:instance/edit", (request, response) -> {
-
-        });
-
-
-        /**
-         * Show the list of instances of certain entity of a model
-         * Expects a json
-         * [
-         *
-         *
-         * ]
-         */
-//        get("server/:server/model/:model/entity/:entity", (request, response) -> {
-//            //Get the params from the requestn
-//            String modelName = request.params("id");
-//            String entityId = request.params("entity");
-//            String serverId = request.params("server");
-//
-//            //Get the attributes of the entity
-//            String jsonAttributeList = Main.request("http://localhost/api/model/" + modelName +
-//                    "/entity/" + entityId + "/attributes" , "");
-//
-//            //Get the instances of the entity
-//            String jsonInstanceList = Main.request("http://localhost/api/model/" + modelName +
-//                    "/entity/" + entityId + "/list" , "");
-//
-//            //Parse the attributes json
-//            Type typeAttributesList = new TypeToken<List<Attribute>>(){}.getType();
-//            List<Attribute> attributes = Main.gson.fromJson(request.body(), typeAttributesList);
-//
-//            //Parse the the instances json
-//            Type typeInstanceList = new TypeToken<List<Map<String, String>>>(){}.getType();
-//            List<Map<String, String>> instances = gson.fromJson(request.body(), typeInstanceList);
-//
-//            Map<String, Object> model = new HashMap<>();
-//            model.put("attributes", attributes);
-//            model.put("instances", instances);
-//
-//            return engine.render(model, "list.html");
-//        });
-//
-//        //todo - list all the entities available in the model
-//        get("/model/:model", (request, response) -> {
-//
-//        });
-//
-//        // Set up endpoints
-//        get("/", (request, response) -> {
-////            Map<String, Object> map = new HashMap<>();
-////            map.put("authorRows", Author.all().size());
-////            map.put("bookRows", Book.all().size());
-////            map.put("pageRows", Page.all().size());
-////            map.put("personRows", Person.all().size());
-////            map.put("entityRows", Entity.all().size());
-////            return engine.render(map, "index.html");
-//            return null;
-//        });
-//
-//        get("/author/list", (request, response) -> {
-////            Map<String, Object> map = new HashMap<>();
-////            map.put("authors", Author.all());
-////            map.put("name", "author");
-////            return engine.render(map, "list.html");
-//            return null;
-//        });
-//
-//        get("/author/get", (request, response) -> {
-////            int id = Integer.parseInt(request.queryParams("id"));
-////            Author author = Author.get(id);
-////            Map<String, Object> map = new HashMap<>();
-////            map.put("author", author);
-////            map.put("name", "author");
-////            return engine.render(map, "get.html");
-//            return null;
-//        });
-//
-//        post("/author/update", (request, response) -> {
-////
-////            int id = Integer.parseInt(request.queryParams("id"));
-////            boolean tangible = Boolean.parseBoolean(request.queryParams("tangible"));
-////            String firstName = request.queryParams("firstName");
-////            String lastName = request.queryParams("lastName");
-////            String email = request.queryParams("email");
-////
-////            Author p = Author.get(id);
-////            p.setEmail(email);
-////            p.save();
-////
-////            response.redirect("/author/get?id=" + id);
-////            return "";
-//            return null;
-//        });
-//
-//        get("/author/delete", (request, response) -> {
-////            int id = Integer.parseInt(request.queryParams("id"));
-////            Author p = Author.get(id);
-////            p.delete();
-////
-////            response.redirect("/author/list");
-////            return "";
-//            return null;
-//        });
 
     }
 }
