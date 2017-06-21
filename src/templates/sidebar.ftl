@@ -24,7 +24,9 @@
                 </span>
                 </a>
                 <ul class="treeview-menu">
-
+                    <li class="treeview">
+                        <a href="/"><i class="fa fa-dashboard"></i>Dashboard</a>
+                    </li>
                 <!-- list server menus -->
                 <#list servers as server>
                     <li class="treeview">

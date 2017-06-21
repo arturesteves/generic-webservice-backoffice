@@ -211,6 +211,31 @@ public class Main {
                 }
         });
 
+        get("/server/add", (request, response) -> {
+            try{
+                JSONObject jsonServers = getServers();
+                Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+
+                return engine.render(jsonServerWithEntities, "server/add.ftl");
+
+            }catch(RuntimeException e){
+                response.status(404);
+                return gson.toJson(e.getMessage());
+            }
+        });
+
+        post("/server/add", (request, response) -> {
+            Type type = new TypeToken<Map<String, String>>(){}.getType();
+            Map<String, String> map = gson.fromJson(request.body(), type);
+            String serverName = map.get("name");
+            String serverHost = map.get("host");
+            //Todo - validate if the server doesn't already exists
+            Server server = new Server(serverName, serverHost);
+            Main.addServer(server);
+            response.status(200);
+            return gson.toJson("success");
+        });
+
         get("/server/:server", (request, response) -> {
             JSONObject jsonServers = getServers();
             String server = request.params("server");
@@ -248,26 +273,18 @@ public class Main {
 
         });
 
-        get("/server/add", (request, response) -> {
-            JSONObject server = getServers();
-            return engine.render(server, "server/add.ftl");
-        });
-
-        post("/server/add", (request, response) -> {
-            Type type = new TypeToken<Map<String, String>>(){}.getType();
-            Map<String, String> map = gson.fromJson(request.body(), type);
-            String serverName = map.get("name");
-            String serverHost = map.get("host");
-            //Todo - validate if the server doesn't already exists
-            Server server = new Server(serverName, serverHost);
-            Main.addServer(server);
-            response.status(200);
-            return gson.toJson("success");
-        });
-
         get("/server/remove", (request, response) -> {
-            JSONObject model = getServers();
-            return engine.render(model, "server/remove.ftl");
+            try{
+                JSONObject jsonServers = getServers();
+                Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+
+                return engine.render(jsonServerWithEntities, "server/remove.ftl");
+
+            }catch(RuntimeException e){
+                response.status(404);
+                return gson.toJson(e.getMessage());
+            }
+
         });
 
         post("/server/remove", (request, response) -> {
@@ -280,107 +297,134 @@ public class Main {
         });
 
         get("/server/:server/entity/:entity", (request, response) -> {
-            JSONObject servers = getServers();
-            //Get the params from the request
-            String server = request.params("server");
-            String entity = request.params("entity");
+            try {
+                JSONObject jsonServers = getServers();
+                Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-            //todo receive server
-            String host = getServerHost(server);
-            if(host == null) {
-                //todo - redirect to not found
-                response.status(404);
-                return gson.toJson("Not found");
-            }
+                //Get the params from the request
+                String server = request.params("server");
+                String entity = request.params("entity");
 
-            //Get the attributes of the entity
-            String jsonAttributeList = Main.request(host + "/api/entity/" + entity +
-                    "/attributes" , "");
+                //todo receive server
+                String host = getServerHost(server);
+                if(host == null) {
+                    //todo - redirect to not found
+                    response.status(404);
+                    return gson.toJson("Not found");
+                }
 
-            //Get the instances of the entity
-            String jsonInstanceList = Main.request(host + "/api/entity/" + entity +
-                    "/instance" , "");
+                //Get the attributes of the entity
+                String jsonAttributeList = Main.request(host + "/api/entity/" + entity +
+                        "/attributes" , "");
 
-            //Parse the attributes json
-            Type typeAttributesList = new TypeToken<List<Map<String, String>>>() {}.getType();
-            List<Map<String, String>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
+                //Get the instances of the entity
+                String jsonInstanceList = Main.request(host + "/api/entity/" + entity +
+                        "/instance" , "");
 
-            //Parse the the instances json
-            Type typeInstanceList = new TypeToken<List<Map<String, String>>>() {}.getType();
-            List<Map<String, String>> instances = gson.fromJson(jsonInstanceList, typeInstanceList);
+                //Parse the attributes json
+                Type typeAttributesList = new TypeToken<List<Map<String, String>>>() {}.getType();
+                List<Map<String, String>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
 
-            Map<String, Object> model = new HashMap<>();
-            model.put("host", host);
-            model.put("servers", servers.get("servers"));
-            model.put("attributes", attributes);
-            model.put("instances", instances);
+                //Parse the the instances json
+                Type typeInstanceList = new TypeToken<List<Map<String, String>>>() {}.getType();
+                List<Map<String, String>> instances = gson.fromJson(jsonInstanceList, typeInstanceList);
+
+                Map<String, Object> model = new HashMap<>();
+                model.put("host", host);
+                model.put("servers", jsonServerWithEntities);
+                model.put("attributes", attributes);
+                model.put("instances", instances);
 //            return instances;
-            return engine.render(model, "entity/entity.ftl");
+                return engine.render(model, "entity/entity.ftl");
+
+            }catch(RuntimeException e){
+                response.status(404);
+                return gson.toJson(e.getMessage());
+            }
         });
 
         //Instance information and edit page
         get("/server/:server/entity/:entity/instance/:instance", (request, response) -> {
-            JSONObject servers = getServers();
-            //Get the params from the request
-            String server = request.params("server");
-            String entity = request.params("entity");
-            String instance = request.params("instance");
+            try {
+                JSONObject jsonServers = getServers();
+                Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-            String host = getServerHost(server);
-            if(host == null) {
-                //todo - redirect to not found
-                return null;
+                //Get the params from the request
+                String server = request.params("server");
+                String entity = request.params("entity");
+                String instance = request.params("instance");
+
+                String host = getServerHost(server);
+                if(host == null) {
+                    //todo - redirect to not found
+                    return null;
+                }
+
+                //Get the attributes of the entity
+                String jsonAttributeList = Main.request(host + "/api/entity/" + entity +
+                        "/attributes" , "");
+
+                //Get the instances of the entity
+                String jsonInstance = Main.request(host + "/api/entity/" + entity +
+                        "/instance/" + instance , "");
+
+                //Parse the attributes json
+                Type typeAttributesList = new TypeToken<List<Map<String, String>>>() {}.getType();
+                List<Map<String, String>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
+
+                //Parse the the instances json
+                Type typeInstance = new TypeToken<Map<String, String>>() {}.getType();
+                Map<String, String> instanceMap = gson.fromJson(jsonInstance, typeInstance);
+
+                Map<String, Object> model = new HashMap<>();
+                model.put("servers", jsonServerWithEntities);
+                model.put("attributes", attributes);
+                model.put("instance", instanceMap);
+
+                return engine.render(model, "instance/instance.ftl");
+
+            }catch(RuntimeException e){
+                response.status(404);
+                return gson.toJson(e.getMessage());
             }
-
-            //Get the attributes of the entity
-            String jsonAttributeList = Main.request(host + "/api/entity/" + entity +
-                    "/attributes" , "");
-
-            //Get the instances of the entity
-            String jsonInstance = Main.request(host + "/api/entity/" + entity +
-                    "/instance/" + instance , "");
-
-            //Parse the attributes json
-            Type typeAttributesList = new TypeToken<List<Map<String, String>>>() {}.getType();
-            List<Map<String, String>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
-
-            //Parse the the instances json
-            Type typeInstance = new TypeToken<Map<String, String>>() {}.getType();
-            Map<String, String> instanceMap = gson.fromJson(jsonInstance, typeInstance);
-
-            Map<String, Object> model = new HashMap<>();
-            model.put("servers", servers.get("servers"));
-            model.put("attributes", attributes);
-            model.put("instance", instanceMap);
-
-            return engine.render(model, "instance/instance.ftl");
         });
 
         //Instance adding page
         get("/server/:server/entity/:entity/instance/:instance/add", (request, response) -> {
-            //Get the params from the request
-            String server = request.params("server");
-            String entity = request.params("entity");
-            String instance = request.params("instance");
+            try {
+                JSONObject jsonServers = getServers();
+                Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-            String host = getServerHost(server);
-            if(host == null) {
-                //todo - redirect to not found
-                return null;
+
+                //Get the params from the request
+                String server = request.params("server");
+                String entity = request.params("entity");
+                String instance = request.params("instance");
+
+                String host = getServerHost(server);
+                if(host == null) {
+                    //todo - redirect to not found
+                    return null;
+                }
+
+                //Get the attributes of the entity
+                String jsonAttributeList = Main.request(host + "/api/entity/" + entity +
+                        "/attributes" , "");
+
+                //Parse the attributes json
+                Type typeAttributesList = new TypeToken<List<Attribute>>() {}.getType();
+                List<Attribute> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
+
+                Map<String, Object> model = new HashMap<>();
+                model.put("attributes", attributes);
+                model.put("servers", jsonServerWithEntities);
+
+                return engine.render(model, "instance/add.ftl");
+
+            }catch(RuntimeException e){
+                response.status(404);
+                return gson.toJson(e.getMessage());
             }
-
-            //Get the attributes of the entity
-            String jsonAttributeList = Main.request(host + "/api/entity/" + entity +
-                    "/attributes" , "");
-
-            //Parse the attributes json
-            Type typeAttributesList = new TypeToken<List<Attribute>>() {}.getType();
-            List<Attribute> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
-
-            Map<String, Object> model = new HashMap<>();
-            model.put("attributes", attributes);
-
-            return engine.render(model, "instance/add.ftl");
         });
 
     }
