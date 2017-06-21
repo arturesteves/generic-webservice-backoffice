@@ -47,7 +47,7 @@
                                         <span style="color: rgba(32, 32, 32, 0.76);">${entity.instanceCount}</span>
                                     </div>
                                     <!-- /.info-box-content -->
-                                    
+
                                 </div>
                                 <!-- /.info-box -->
                             </div>
