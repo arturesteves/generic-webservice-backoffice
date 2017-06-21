@@ -167,12 +167,43 @@ public class Main {
 
         get("/", (request, response) -> {
             try {
-                JSONObject model = getServers();
+                Map<String, Object> model = new HashMap<>();
+                JSONObject jsonServers = getServers();
+
+                String server;
+                String host;
+                String jsonEntityList;
+                Type typeEntityList;
+                List<Entity> entities;
+
+                for(int i = 0; i < ((List) jsonServers.get("servers")).size(); i++){
+                    server = (String) ((JSONObject) ((List) jsonServers.get("servers")).get(i)).get("name");
+                    host = getServerHost(server);
+
+                    if(host == null) {
+                        response.status(404);
+                        return gson.toJson("Not found");
+                    }
+
+                    // get entities
+                    jsonEntityList = Main.request(host + "/api/entity", "");
+
+                    //Parse the attributes json
+                    typeEntityList = new TypeToken<List<Map<String,String>>>() {}.getType();
+                    entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
+
+                    ((JSONObject) ((List) jsonServers.get("servers")).get(i)).put("entities", entities);
+                }
+
+
+                model.put("servers", jsonServers.get("servers"));
+
                 return engine.render(model, "server/index.ftl");
+                //return model;
             } catch (Exception e) {
                 e.printStackTrace();
                 response.status(500);
-                return gson.toJson("");
+                return gson.toJson(e.getMessage());
             }
         });
 
@@ -194,6 +225,7 @@ public class Main {
             //Parse the attributes json
             Type typeEntityList = new TypeToken<List<Entity>>() {}.getType();
             List<Entity> entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
+
 
             Map<String, Object> model = new HashMap<>();
             model.put("servers", servers.get("servers"));

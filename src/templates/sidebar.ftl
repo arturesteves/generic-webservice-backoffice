@@ -26,7 +26,29 @@
                 </a>
                 <ul class="treeview-menu">
                 <#list servers as server>
-                    <li><a href="/server/${server.name}"><i class="fa fa-rocket"></i> ${server.name}</a></li>
+                    <li class="treeview">
+                        <a href="#"> <!-- href="/server/${server.name}" -->
+                            <i class="fa fa-globe"></i>
+                            ${server.name}
+                            <#if server.entities??>
+                                <span class="pull-right-container">
+                                <i class="fa fa-angle-left pull-right"></i>
+                            </span>
+                            </#if>
+                        </a>
+                        <ul class="treeview-menu" style="display: block;">
+                            <li class="treeview">
+                                <a href="/server/${server.name}"><i class="fa fa-dashboard"></i>Dashboard</a>
+                            </li>
+                            <#list server.entities as entity>
+                                <li class="treeview">
+                                    <a href="/server/${server.name}/entity/${entity.name}">
+                                        <i class="fa fa-cube"></i> ${entity.name}
+                                    </a>
+                                </li>
+                            </#list>
+                        </ul>
+                    </li>
                 </#list>
                 </ul>
             </li>
