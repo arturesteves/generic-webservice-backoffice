@@ -1,2 +1,1 @@
-{"servers":[{"name":"Localhost","host":"http://localhost:8000","description":"A localhost server for testing"}]
-}
+{"servers":[{"name":"Localhost","host":"http://localhost:8000","description":"A localhost server for testing"}],"usersAllowed":[{"password":"5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5","name":"Ricardo","email":"moraispgsi@gmail.com"}]}
