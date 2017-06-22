@@ -7,10 +7,17 @@ public class Server {
 
     private String host;
     private String name;
+    private String description;
+
 
     public Server(String host, String name) {
+        this(host, name, "");
+    }
+
+    public Server(String host, String name, String description) {
         this.host = host;
         this.name = name;
+        this.description = description;
     }
 
     public String getHost() {
@@ -27,5 +34,23 @@ public class Server {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+
+    @Override
+    public String toString() {
+        return '{' +
+                "\"name\": \"" + name + "\",\n" +
+                "\"host\": \"" + host + "\",\n" +
+                "\"description=\": \"" + description + "\"\n" +
+                '}';
     }
 }
