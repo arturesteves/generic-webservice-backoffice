@@ -1,9 +1,4 @@
-{
-  "servers": [
-    {
-      "name": "Localhost",
-      "host": "http://localhost:8000",
-      "description": "A localhost server for testing"
-    }
-  ]
-}
+{"servers":[{"name":"Localhost","host":"http://localhost:8000","description":"A localhost server for testing"},{"name": "SCHOOL-SERVERyt",
+"host": "http://localhost:80100",
+"description=": "Simple test server"
+},"{hash: \"5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8\"},"]}
