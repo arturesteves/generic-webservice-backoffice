@@ -96,12 +96,6 @@ public class Main {
 
             if(!Main.serverExists(server.getHost(), servers)) {
                 servers.add(server);
-                String password = "password";
-                MessageDigest digest = MessageDigest.getInstance("SHA-256");
-                byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
-                String has  = String.format("%064x", new java.math.BigInteger(1, hash));
-                System.out.println(has);
-                servers.add("{hash: \"" + has + "\"},");
                 // save changes on file
                 FileWriter writer = new FileWriter(pathFile);
                 writer.write((object.toJSONString()).replace("\\/", "/"));
@@ -111,8 +105,6 @@ public class Main {
                 return true;
             }
         } catch (ParseException | IOException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return false;
