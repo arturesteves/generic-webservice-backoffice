@@ -6,6 +6,7 @@
 package main;
 
 import com.google.gson.JsonParser;
+import org.json.JSONWriter;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -23,6 +24,9 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import java.text.DateFormat;
@@ -83,22 +87,37 @@ public class Main {
 
     }
 
-    private static void addServer(Server server) {
+    private static boolean addServer(Server server) {
         JSONParser parser = new JSONParser();
         try {
-            JSONObject object = (JSONObject)parser.parse(new FileReader(System.getProperty("user.dir") + "/src/utils/server.json"));
+            String pathFile = System.getProperty("user.dir") + "/src/utils/server.json";
+            JSONObject object = (JSONObject)parser.parse(new FileReader(pathFile));
             JSONArray servers = (JSONArray)object.get("servers");
-            servers.add(server);
-            //todo -- save in file
-        } catch (FileNotFoundException e) {
+
+            if(!Main.serverExists(server.getHost(), servers)) {
+                servers.add(server);
+                String password = "password";
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] hash = digest.digest(password.getBytes(StandardCharsets.UTF_8));
+                String has  = String.format("%064x", new java.math.BigInteger(1, hash));
+                System.out.println(has);
+                servers.add("{hash: \"" + has + "\"},");
+                // save changes on file
+                FileWriter writer = new FileWriter(pathFile);
+                writer.write((object.toJSONString()).replace("\\/", "/"));
+                writer.flush();
+                writer.close();
+
+                return true;
+            }
+        } catch (ParseException | IOException e) {
             e.printStackTrace();
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-
+        return false;
     }
+
 
     private static void removeServer(String name) {
         JSONParser parser = new JSONParser();
@@ -157,12 +176,26 @@ public class Main {
 
     }
 
+
+    private static boolean serverExists(String host, List servers){
+        String hostEscaped;
+
+        for(int i = 0; i < servers.size(); i++) {
+            hostEscaped = ((String)((JSONObject) servers.get(i)).get("host")).replace("\\/", "/");
+            if(hostEscaped.equals(host)){
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static Object getServersWithEntities(JSONObject jsonServers){
         String server;
         String host;
         String jsonEntityList;
         Type typeEntityList;
         List<Entity> entities;
+        //List servers = ;
 
         for(int i = 0; i < ((List) jsonServers.get("servers")).size(); i++){
             server = (String) ((JSONObject) ((List) jsonServers.get("servers")).get(i)).get("name");
@@ -207,6 +240,7 @@ public class Main {
                     model.put("servers", jsonServerWithEntities);
 
                     return engine.render(model, "server/index.ftl");
+                    //return model;
 
                 }catch(RuntimeException e){
                     response.status(404);
@@ -232,11 +266,18 @@ public class Main {
             Map<String, String> map = gson.fromJson(request.body(), type);
             String serverName = map.get("name");
             String serverHost = map.get("host");
+            String description = map.get("description");
+
             //Todo - validate if the server doesn't already exists
-            Server server = new Server(serverName, serverHost);
-            Main.addServer(server);
-            response.status(200);
-            return gson.toJson("success");
+            Server server = new Server(serverHost, serverName, description);
+            boolean result = Main.addServer(server);
+            if(result){
+                response.status(200);
+                return gson.toJson("success");
+            }else{
+                response.status(400);
+                return gson.toJson("unsuccessful");
+            }
         });
 
         get("/server/remove", (request, response) -> {

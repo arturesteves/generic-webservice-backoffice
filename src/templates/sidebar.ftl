@@ -28,7 +28,8 @@
                         <a href="/"><i class="fa fa-dashboard"></i>Dashboard</a>
                     </li>
                 <!-- list server menus -->
-                <#list servers as server>
+                <#if servers??>
+                    <#list servers as server>
                     <li class="treeview">
                         <a href="#">
                             <i class="fa fa-globe"></i>
@@ -43,16 +44,19 @@
                             <li class="treeview">
                                 <a href="/server/${server.name}"><i class="fa fa-dashboard"></i>Dashboard</a>
                             </li>
-                            <#list server.entities as entity>
+                            <#if server.entities??>
+                                <#list server.entities as entity>
                                 <li class="treeview">
                                     <a href="/server/${server.name?lower_case}/entity/${entity.name?lower_case}">
                                         <i class="fa fa-cube"></i> ${entity.name}
                                     </a>
                                 </li>
-                            </#list>
+                                </#list>
+                            </#if>
                         </ul>
                     </li>
-                </#list>
+                    </#list>
+                </#if>
                 </ul>
             </li>
         </ul>
