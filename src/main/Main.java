@@ -665,6 +665,7 @@ public class Main {
 
                 model.put("host", host);
                 model.put("servers", jsonServerWithEntities);
+                model.put("server", server);
                 model.put("entity", entity);
                 model.put("attributes", attributes);
                 model.put("instance", instanceMap);
