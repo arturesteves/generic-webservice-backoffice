@@ -20,8 +20,8 @@
             </h1>
             <ol class="breadcrumb">
                 <li><a href="/"><i class="fa fa-dashboard"></i> Home</a></li>
-                <li><a href="/"><i class="fa fa-dashboard"></i> todo</a></li>
-                <li class="active"><i class="fa fa-dashboard"></i> Instance</li>
+                <li><a href="/server/${server}"><i class="fa fa-dashboard"></i> ${server}</a></li>
+                <li class="active"><i class="fa fa-dashboard"></i> ${entity}</li>
             </ol>
         </section>
 
