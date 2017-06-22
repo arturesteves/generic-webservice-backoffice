@@ -233,8 +233,8 @@ public class Main {
 
         get("/", (request, response) -> {
                 Map<String, Object> model = new HashMap<>();
-                JSONObject jsonServers = getServers();
                 try{
+                    JSONObject jsonServers = getServers();
                     Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
                     model.put("servers", jsonServerWithEntities);
@@ -243,21 +243,24 @@ public class Main {
                     //return model;
 
                 }catch(RuntimeException e){
-                    response.status(404);
-                    return gson.toJson(e.getMessage());
+                    response.status(500);
+                    return engine.render(model, "500.ftl");
                 }
         });
 
         get("/server/add", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
             try{
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-                return engine.render(jsonServerWithEntities, "server/add.ftl");
+                model.put("servers", jsonServerWithEntities);
+
+                return engine.render(model, "server/add.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                response.status(500);
+                return engine.render(model, "500.ftl");
             }
         });
 
@@ -268,7 +271,6 @@ public class Main {
             String serverHost = map.get("host");
             String description = map.get("description");
 
-            //Todo - validate if the server doesn't already exists
             Server server = new Server(serverHost, serverName, description);
             boolean result = Main.addServer(server);
             if(result){
@@ -281,15 +283,18 @@ public class Main {
         });
 
         get("/server/remove", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
             try{
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-                return engine.render(jsonServerWithEntities, "server/remove.ftl");
+                model.put("servers", jsonServerWithEntities);
+
+                return engine.render(model, "server/remove.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                response.status(500);
+                return engine.render(model, "500.ftl");
             }
 
         });
@@ -297,16 +302,15 @@ public class Main {
         get("/server/:server", (request, response) -> {
             JSONObject jsonServers = getServers();
             String server = request.params("server");
+            Map<String, Object> model = new HashMap<>();
 
             try{
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-                //todo receive server
                 String host = getServerHost(server);
                 if(host == null) {
-                    //todo - redirect to not found
-                    response.status(404);
-                    return gson.toJson("Not found");
+                    response.status(400);
+                    return engine.render(model, "404.ftl");
                 }
 
                 //Get the server entities
@@ -316,7 +320,7 @@ public class Main {
                 Type typeEntityList = new TypeToken<List<Entity>>() {}.getType();
                 List<Entity> entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
 
-                Map<String, Object> model = new HashMap<>();
+
                 model.put("servers", jsonServerWithEntities);
                 model.put("host", host);
                 model.put("server", server);
@@ -325,8 +329,8 @@ public class Main {
                 return engine.render(model, "server/server.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                response.status(500);
+                return engine.render(model, "500.ftl");
             }
 
         });
@@ -341,6 +345,7 @@ public class Main {
         });
 
         get("/server/:server/entity/:entity", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
             try {
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
@@ -349,12 +354,10 @@ public class Main {
                 String server = request.params("server");
                 String entity = request.params("entity");
 
-                //todo receive server
                 String host = getServerHost(server);
                 if(host == null) {
-                    //todo - redirect to not found
                     response.status(404);
-                    return gson.toJson("Not found");
+                    return engine.render(model, "404.ftl");
                 }
 
                 //Get the attributes of the entity
@@ -373,7 +376,6 @@ public class Main {
                 Type typeInstanceList = new TypeToken<List<Map<String, String>>>() {}.getType();
                 List<Map<String, String>> instances = gson.fromJson(jsonInstanceList, typeInstanceList);
 
-                Map<String, Object> model = new HashMap<>();
                 model.put("host", host);
                 model.put("servers", jsonServerWithEntities);
                 model.put("attributes", attributes);
@@ -383,13 +385,15 @@ public class Main {
                 return engine.render(model, "entity/entity.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                response.status(500);
+                return engine.render(model, "500.ftl");
             }
         });
 
         //Instance adding page
         get("/server/:server/entity/:entity/instance/add", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
+
             try {
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
@@ -400,8 +404,8 @@ public class Main {
 
                 String host = getServerHost(server);
                 if(host == null) {
-                    //todo - redirect to not found
-                    return null;
+                    response.status(404);
+                    return engine.render(model, "404.ftl");
                 }
 
                 //Get the attributes of the entity
@@ -412,7 +416,6 @@ public class Main {
                 Type typeAttributesList = new TypeToken<List<Map<String, String>>>() {}.getType();
                 List<Map<String, String>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
 
-                Map<String, Object> model = new HashMap<>();
                 model.put("host", host);
                 model.put("entity", entity);
                 model.put("attributes", attributes);
@@ -421,12 +424,13 @@ public class Main {
                 return engine.render(model, "instance/add.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                response.status(500);
+                return engine.render(model, "500.ftl");
             }
         });
         //Instance information and edit page
         get("/server/:server/entity/:entity/instance/:instance", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
             try {
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
@@ -438,8 +442,8 @@ public class Main {
 
                 String host = getServerHost(server);
                 if(host == null) {
-                    //todo - redirect to not found
-                    return null;
+                    response.status(404);
+                    return engine.render(model, "404.ftl");
                 }
 
                 //Get the attributes of the entity
@@ -458,7 +462,6 @@ public class Main {
                 Type typeInstance = new TypeToken<Map<String, String>>() {}.getType();
                 Map<String, String> instanceMap = gson.fromJson(jsonInstance, typeInstance);
 
-                Map<String, Object> model = new HashMap<>();
                 model.put("host", host);
                 model.put("servers", jsonServerWithEntities);
                 model.put("entity", entity);
@@ -468,11 +471,27 @@ public class Main {
                 return engine.render(model, "instance/instance.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                response.status(500);
+                return engine.render(model, "500.ftl");
             }
         });
 
 
+        get("*", (request, response) ->{
+            Map<String, Object> model = new HashMap<>();
+
+            try{
+            JSONObject jsonServers = getServers();
+            Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+
+            model.put("servers", jsonServerWithEntities);
+
+            return engine.render(jsonServerWithEntities, "404.ftl");
+
+            }catch(RuntimeException e){
+                response.status(500);
+                return engine.render(model, "500.ftl");
+            }
+        });
     }
 }
