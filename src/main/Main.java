@@ -5,13 +5,11 @@
 
 package main;
 
-import com.google.gson.JsonParser;
-import org.json.JSONWriter;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import spark.Response;
 import utils.FreemarkerEngine;
 
 import com.google.gson.Gson;
@@ -29,19 +27,13 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 
 import static spark.Spark.*;
 
-/*
-todo - The server must provide a way to persist the servers hosts maybe in a json file
- */
+
 public class Main {
 
     private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-
-
 
 
     private static String request(String url, String params) {
@@ -94,7 +86,7 @@ public class Main {
             JSONObject object = (JSONObject)parser.parse(new FileReader(pathFile));
             JSONArray servers = (JSONArray)object.get("servers");
 
-            if(!Main.serverExists(server.getHost(), servers)) {
+            if(!Main.serverExists(server.getHost(), server.getName(), servers)) {
                 servers.add(server);
                 // save changes on file
                 FileWriter writer = new FileWriter(pathFile);
@@ -109,7 +101,6 @@ public class Main {
         }
         return false;
     }
-
 
     private static void removeServer(String name) {
         JSONParser parser = new JSONParser();
@@ -168,13 +159,16 @@ public class Main {
 
     }
 
-
-    private static boolean serverExists(String host, List servers){
+    private static boolean serverExists(String host, String name, List servers){
         String hostEscaped;
+        String serverName;
 
         for(int i = 0; i < servers.size(); i++) {
             hostEscaped = ((String)((JSONObject) servers.get(i)).get("host")).replace("\\/", "/");
-            if(hostEscaped.equals(host)){
+            serverName = ((String) ((JSONObject) servers.get(i)).get("name"));
+
+            if(hostEscaped.equals(host) || serverName.equals(name)){
+
                 return true;
             }
         }
@@ -187,10 +181,10 @@ public class Main {
         String jsonEntityList;
         Type typeEntityList;
         List<Entity> entities;
-        //List servers = ;
+        List servers = (List) jsonServers.get("servers");
 
         for(int i = 0; i < ((List) jsonServers.get("servers")).size(); i++){
-            server = (String) ((JSONObject) ((List) jsonServers.get("servers")).get(i)).get("name");
+            server = (String) ((JSONObject) servers.get(i)).get("name");
             host = getServerHost(server);
 
             if(host == null) {
@@ -204,13 +198,94 @@ public class Main {
             typeEntityList = new TypeToken<List<Map<String,String>>>() {}.getType();
             entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
 
-            ((JSONObject) ((List) jsonServers.get("servers")).get(i)).put("entities", entities);
+            ((JSONObject) servers.get(i)).put("entities", entities);
         }
 
         return jsonServers.get("servers");
     }
 
+    private static boolean isValidLogin(String email, String password){
+        JSONObject jsonServers = Main.getServers();
+        JSONArray users = (JSONArray) jsonServers.get("usersAllowed");
+        JSONObject userObject;
+        String passwordHash = Main.stringToHash(password, "SHA-256");
+
+        for (Object user : users) {
+            userObject = ((JSONObject) user);
+            if (userObject.get("email").equals(email) && userObject.get("password").equals(passwordHash)) {
+                // user found
+                return true;
+            }
+        }
+        // not user found with email and password received
+        return false;
+    }
+
+    private static boolean addUser(User user){
+        String pathFile = System.getProperty("user.dir") + "/src/utils/server.json";
+        try {
+            JSONObject jsonServers = getServers();
+            List arrayUsers;
+
+            String passwordHash = stringToHash(user.getPassword(), "SHA-256");
+
+            // create object with user
+            JSONObject newUser = new JSONObject();
+            newUser.put("name", user.getFullName());
+            newUser.put("email", user.getEmail());
+            newUser.put("password", passwordHash);
+
+            arrayUsers = (JSONArray) jsonServers.get("usersAllowed");
+
+            if(arrayUsers == null){
+                // not user registered
+                List<JSONObject> listUsers = new ArrayList<>();
+                listUsers.add(newUser);
+                jsonServers.put("usersAllowed", listUsers);
+            }else{
+                for(int i = 0; i < arrayUsers.size(); i++){
+                    JSONObject userOnFile = (JSONObject) arrayUsers.get(i);
+                    if(userOnFile.get("email").equals(user.getEmail())){
+                        // user already exists with that email
+                        return false;
+                    }
+                }
+                // server already have users registered
+                List listUsers = arrayUsers;
+                listUsers.add(newUser);
+            }
+
+            // save changes on file
+            FileWriter writer = new FileWriter(pathFile);
+            writer.write((jsonServers.toJSONString()).replace("\\/", "/"));
+            writer.flush();
+            writer.close();
+
+            return true;
+
+        } catch (IOException e) {
+            System.out.println(e);
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    private static String stringToHash(String str, String hashFunction){
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance(hashFunction);
+            byte[] digested = digest.digest(str.getBytes(StandardCharsets.UTF_8));
+            String hash  = String.format("%064x", new java.math.BigInteger(1, digested));
+
+            return hash;
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static void main(String[] args) {
+
 
         // Configure Spark
         port(3000);
@@ -223,33 +298,164 @@ public class Main {
         //     DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 
 
+        before((request,response)->{
+            String method = request.requestMethod();
+            if(!(request.uri().equals("/authenticate") || request.uri().equals("/register"))){
+                if(method.equals("GET")){
+                    String emailSession = request.session().attribute("email");
+                    if(emailSession == null){
+//                        halt(401, "User Unauthorized");
+                        //return page of authorization?
+                        response.redirect("/authenticate");
+                    }
+                }
+            }
+        });
+
+        get("/authenticate", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
+            try {
+                JSONObject jsonServers = getServers();
+                Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+
+                model.put("servers", jsonServerWithEntities);
+
+                return engine.render(model, "authenticate.ftl");
+            }catch(RuntimeException e){
+                System.out.println(e);
+                response.status(500);
+                return engine.render(null, "500.ftl");
+            }
+
+        });
+
+        post("/authenticate", (request, response) ->{
+            String email = request.queryParams("email");
+            String password = request.queryParams("password");
+
+            boolean result = Main.isValidLogin(email, password);
+            if(result){
+                //create a session with email
+                request.session(true);
+                request.session().attribute("email", email);
+
+                Map<String, Object> model = new HashMap<>();
+                try {
+                    JSONObject jsonServers = getServers();
+                    Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+                    model.put("servers", jsonServerWithEntities);
+
+                    response.redirect("/");
+                    return "success";
+                }catch(RuntimeException e){
+                    System.out.println(e);
+                    response.status(500);
+                    return engine.render(null, "500.ftl");
+                }
+            }else{
+                response.redirect("/authenticate");
+                return "";
+            }
+        });
+
+        get("/register", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
+            try {
+                JSONObject jsonServers = getServers();
+                Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+
+                model.put("servers", jsonServerWithEntities);
+
+                return engine.render(model, "register.ftl");
+            }catch(RuntimeException e){
+                System.out.println(e);
+                response.status(500);
+                return engine.render(null, "500.ftl");
+            }
+
+        });
+
+        post ("/register", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
+            try{
+                String name = request.queryParams("name");
+                String email = request.queryParams("email");
+                String password = request.queryParams("password");
+                String checkPassword = request.queryParams("checkPassword");
+
+                if(password.equals(checkPassword)){
+                    User user = new User(name, email, password);
+
+                    boolean result = Main.addUser(user);
+                    if(result){
+                        //create a session
+                        request.session(true);
+                        request.session().attribute("email", email);
+
+                        JSONObject jsonServers = getServers();
+                        Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+                        model.put("servers", jsonServerWithEntities);
+
+                        response.redirect("/");
+                        return "success";
+
+                    }else{
+                        response.status(400);
+                        return engine.render(null, "400.ftl");
+                    }
+                }else{
+                    response.redirect("/register");
+                    return "unsuccessful";
+                }
+            }catch(Exception e){
+                System.out.println(e);
+                response.status(500);
+                return engine.render(model, "500.ftl");
+            }
+        });
+
+        get("/logout", (request, response) -> {
+            // clear session
+            request.session().removeAttribute("email");
+            response.redirect("/authenticate");
+            return "";
+        });
+
+
         get("/", (request, response) -> {
                 Map<String, Object> model = new HashMap<>();
-                JSONObject jsonServers = getServers();
                 try{
+                    JSONObject jsonServers = getServers();
                     Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
                     model.put("servers", jsonServerWithEntities);
 
                     return engine.render(model, "server/index.ftl");
+
                     //return model;
 
                 }catch(RuntimeException e){
-                    response.status(404);
-                    return gson.toJson(e.getMessage());
+                    System.out.println(e);
+                    response.status(500);
+                    return engine.render(null, "500.ftl");
                 }
         });
 
+
         get("/server/add", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
             try{
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-                return engine.render(jsonServerWithEntities, "server/add.ftl");
+                model.put("servers", jsonServerWithEntities);
+
+                return engine.render(model, "server/add.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                System.out.println(e);
+                response.status(500);
+                return engine.render(null, "500.ftl");
             }
         });
 
@@ -260,28 +466,31 @@ public class Main {
             String serverHost = map.get("host");
             String description = map.get("description");
 
-            //Todo - validate if the server doesn't already exists
             Server server = new Server(serverHost, serverName, description);
             boolean result = Main.addServer(server);
             if(result){
-                response.status(200);
-                return gson.toJson("success");
+                response.redirect("/");
+                return "success";
             }else{
                 response.status(400);
-                return gson.toJson("unsuccessful");
+                return engine.render(null,"400.ftl");
             }
         });
 
         get("/server/remove", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
             try{
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-                return engine.render(jsonServerWithEntities, "server/remove.ftl");
+                model.put("servers", jsonServerWithEntities);
+
+                return engine.render(model, "server/remove.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                System.out.println(e);
+                response.status(500);
+                return engine.render(null, "500.ftl");
             }
 
         });
@@ -289,16 +498,15 @@ public class Main {
         get("/server/:server", (request, response) -> {
             JSONObject jsonServers = getServers();
             String server = request.params("server");
+            Map<String, Object> model = new HashMap<>();
 
             try{
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
-                //todo receive server
                 String host = getServerHost(server);
                 if(host == null) {
-                    //todo - redirect to not found
-                    response.status(404);
-                    return gson.toJson("Not found");
+                    response.status(400);
+                    return engine.render(null, "404.ftl");
                 }
 
                 //Get the server entities
@@ -308,7 +516,7 @@ public class Main {
                 Type typeEntityList = new TypeToken<List<Entity>>() {}.getType();
                 List<Entity> entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
 
-                Map<String, Object> model = new HashMap<>();
+
                 model.put("servers", jsonServerWithEntities);
                 model.put("host", host);
                 model.put("server", server);
@@ -317,8 +525,9 @@ public class Main {
                 return engine.render(model, "server/server.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                System.out.println(e);
+                response.status(500);
+                return engine.render(null, "500.ftl");
             }
 
         });
@@ -333,6 +542,7 @@ public class Main {
         });
 
         get("/server/:server/entity/:entity", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
             try {
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
@@ -341,12 +551,10 @@ public class Main {
                 String server = request.params("server");
                 String entity = request.params("entity");
 
-                //todo receive server
                 String host = getServerHost(server);
                 if(host == null) {
-                    //todo - redirect to not found
                     response.status(404);
-                    return gson.toJson("Not found");
+                    return engine.render(null, "404.ftl");
                 }
 
                 //Get the attributes of the entity
@@ -365,7 +573,7 @@ public class Main {
                 Type typeInstanceList = new TypeToken<List<Map<String, String>>>() {}.getType();
                 List<Map<String, String>> instances = gson.fromJson(jsonInstanceList, typeInstanceList);
 
-                Map<String, Object> model = new HashMap<>();
+                model.put("server", server);
                 model.put("host", host);
                 model.put("servers", jsonServerWithEntities);
                 model.put("attributes", attributes);
@@ -375,13 +583,16 @@ public class Main {
                 return engine.render(model, "entity/entity.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                System.out.println(e);
+                response.status(500);
+                return engine.render(null, "500.ftl");
             }
         });
 
         //Instance adding page
         get("/server/:server/entity/:entity/instance/add", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
+
             try {
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
@@ -392,8 +603,8 @@ public class Main {
 
                 String host = getServerHost(server);
                 if(host == null) {
-                    //todo - redirect to not found
-                    return null;
+                    response.status(404);
+                    return engine.render(null, "404.ftl");
                 }
 
                 //Get the attributes of the entity
@@ -404,7 +615,7 @@ public class Main {
                 Type typeAttributesList = new TypeToken<List<Map<String, String>>>() {}.getType();
                 List<Map<String, String>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
 
-                Map<String, Object> model = new HashMap<>();
+                model.put("server", server);
                 model.put("host", host);
                 model.put("entity", entity);
                 model.put("attributes", attributes);
@@ -413,12 +624,14 @@ public class Main {
                 return engine.render(model, "instance/add.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                System.out.println(e);
+                response.status(500);
+                return engine.render(null, "500.ftl");
             }
         });
         //Instance information and edit page
         get("/server/:server/entity/:entity/instance/:instance", (request, response) -> {
+            Map<String, Object> model = new HashMap<>();
             try {
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
@@ -430,8 +643,8 @@ public class Main {
 
                 String host = getServerHost(server);
                 if(host == null) {
-                    //todo - redirect to not found
-                    return null;
+                    response.status(404);
+                    return engine.render(null, "404.ftl");
                 }
 
                 //Get the attributes of the entity
@@ -450,7 +663,6 @@ public class Main {
                 Type typeInstance = new TypeToken<Map<String, String>>() {}.getType();
                 Map<String, String> instanceMap = gson.fromJson(jsonInstance, typeInstance);
 
-                Map<String, Object> model = new HashMap<>();
                 model.put("host", host);
                 model.put("servers", jsonServerWithEntities);
                 model.put("entity", entity);
@@ -460,11 +672,22 @@ public class Main {
                 return engine.render(model, "instance/instance.ftl");
 
             }catch(RuntimeException e){
-                response.status(404);
-                return gson.toJson(e.getMessage());
+                System.out.println(e);
+                response.status(500);
+                return engine.render(null, "500.ftl");
             }
         });
 
 
+        get("*", (request, response) ->{
+            try{
+                return engine.render(null, "404.ftl");
+
+            }catch(RuntimeException e){
+                System.out.println(e);
+                response.status(500);
+                return engine.render(null, "500.ftl");
+            }
+        });
     }
 }
