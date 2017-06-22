@@ -45,7 +45,7 @@
                             </li>
                             <#list server.entities as entity>
                                 <li class="treeview">
-                                    <a href="/server/${server.name}/entity/${entity.name}">
+                                    <a href="/server/${server.name?lower_case}/entity/${entity.name?lower_case}">
                                         <i class="fa fa-cube"></i> ${entity.name}
                                     </a>
                                 </li>
