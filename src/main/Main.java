@@ -479,16 +479,16 @@ public class Main {
 
         get("*", (request, response) ->{
             Map<String, Object> model = new HashMap<>();
-
             try{
             JSONObject jsonServers = getServers();
             Object jsonServerWithEntities = getServersWithEntities(jsonServers);
 
             model.put("servers", jsonServerWithEntities);
 
-            return engine.render(jsonServerWithEntities, "404.ftl");
+            return engine.render(model, "404.ftl");
 
             }catch(RuntimeException e){
+                System.out.println(e);
                 response.status(500);
                 return engine.render(model, "500.ftl");
             }
