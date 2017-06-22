@@ -25,6 +25,27 @@
             </ol>
         </section>
 
+        <div class="modal modal-danger fade" id="modal-danger" style="display: none;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span></button>
+                        <h4 class="modal-title">Remove ${entity}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to remove the ${entity}</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline pull-left" data-dismiss="modal">Close</button>
+                        <button onclick="remove(window.selected)") type="button" class="btn btn-outline">Remove</button>
+                    </div>
+                </div>
+                <!-- /.modal-content -->
+            </div>
+            <!-- /.modal-dialog -->
+        </div>
+
         <!-- Main content -->
         <section class="content">
             <div class="row">
@@ -32,7 +53,7 @@
 
                     <div class="box">
                         <div class="box-header">
-                            <h3 class="box-title">Author</h3>
+                            <h3 class="box-title">${entity}</h3>
                         </div>
                         <!-- /.box-header -->
                         <div class="box-body">
@@ -43,6 +64,8 @@
                                     <#list attributes as attribute>
                                     <th>${attribute.name}</th>
                                     </#list>
+                                    <th>type</th>
+                                    <th>action</th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -50,13 +73,15 @@
                                 <tr>
                                     <td>${instance.id}</td>
                                     <#list attributes as attribute>
+                                        <#if instance[attribute.name]??>
                                     <td>${instance[attribute.name]}</td>
+                                        <#else>
+                                    <td>null</td>
+                                        </#if>
                                     </#list>
-                                    <#--<th>${author.id}</th>-->
-                                    <#--<th>${author.tangible?string("yes", "no")}</th>-->
-                                    <#--<th><#if author.firstName?? >author.firstName}</#if></th>-->
-                                    <#--<th><#if author.lastName?? >author.lastName}</#if></th>-->
-                                    <#--<th><#if author.email?? >author.email}</#if></th>-->
+                                    <td>${instance.superEntity}</td>
+                                    <td><a href="${instance.superEntity?lower_case}/instance/${instance.id}">Edit</a> | <button class="btn-link" data-toggle="modal" data-target="#modal-danger" onclick="window.selected = ${instance.id}">Remove</button></td>
+
                                 </tr>
                                 </#list>
                                 </tbody>
@@ -66,11 +91,17 @@
                                 <#list attributes as attribute>
                                     <th>${attribute.name}</th>
                                 </#list>
+                                    <th>type</th>
+                                    <th>action</th>
                                 </tr>
                                 </tfoot>
                             </table>
                         </div>
                         <!-- /.box-body -->
+                        <div class="box-footer">
+                            <a class="btn  btn-default" href="${entity}/instance/add"">Add new</a>
+                        </div>
+
                     </div>
                     <!-- /.box -->
                 </div>
@@ -92,6 +123,20 @@
     $(function () {
         $("#example2").DataTable();
     });
+
+//    $('#modal-danger').modal()
+    function remove(selectedId) {
+
+        $.ajax({
+            url: "${host}/api/entity/${entity}/instance/"+ selectedId,
+            type: 'DELETE',
+            success: function(result) {
+
+                location.reload();
+            }
+        });
+    }
+
 </script>
 
 </body>

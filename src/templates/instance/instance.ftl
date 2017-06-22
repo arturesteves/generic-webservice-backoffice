@@ -16,12 +16,12 @@
     <!-- Content Header (Page header) -->
     <section class="content-header">
         <h1>
-            Instance
+            ${entity?cap_first}
         </h1>
         <ol class="breadcrumb">
             <li><a href="/"><i class="fa fa-dashboard"></i> Home</a></li>
             <li><a href="/"><i class="fa fa-dashboard"></i> todo</a></li>
-            <li class="active"><i class="fa fa-dashboard"></i> Instance</li>
+            <li class="active"><i class="fa fa-dashboard"></i> ${entity?cap_first}</li>
         </ol>
     </section>
 
@@ -44,22 +44,30 @@
 
                             <div class="form-group">
                                 <label for="inputID">id</label>
+
                                 <input type="text" class="form-control" disabled="true" id="inputID"
                                        value="${instance.id}" placeholder="id">
+
                             </div>
 
                         <#list attributes as attribute>
                         <div class="form-group">
-                        <label for="input3">${attribute.name}</label>
-                        <input type="text" class="form-control" id="input3" value="${instance[attribute.name]}" placeholder="${attribute.name}">
-                        </div>
+                        <label for="input${attribute.name}">${attribute.name}</label>
+                            <#if attribute.type?lower_case == "boolean">
+                                <div style="display: block">
+                                    <input id="input${attribute.name}" type="checkbox" class="minimal" <#if instance[attribute.name]?? && instance[attribute.name] == "true" >checked</#if>>
+                                </div>
+                            <#else>
+                        <input type="text" class="form-control" id="input${attribute.name}" value="<#if instance[attribute.name]?? >${instance[attribute.name]}</#if>" placeholder="${attribute.name}">
+                            </#if>
+                            </div>
                         </#list>
 
                         </div>
                         <!-- /.box-body -->
 
                         <div class="box-footer">
-                            <button type="submit" class="btn btn-primary">Submit</button>
+                            <button type="submit" class="btn btn-primary" onclick="update()">Update</button>
                         </div>
                     </form>
                 </div>
@@ -79,5 +87,55 @@
 
 </div>
 <#include "../scripts.ftl">
+<script>
+    function update(){
+        var idValue = $("#inputID").val();
+    <#list attributes as attribute>
+        <#if attribute.type?lower_case == "boolean">
+        var ${attribute.name}Value = $("#input${attribute.name}").is(':checked');
+        <#elseif attribute.type?lower_case == "integer">
+        var ${attribute.name}Value = parseInt($("#input${attribute.name}").val());
+        <#else>
+        var ${attribute.name}Value = $("#input${attribute.name}").val();
+        </#if>
+    </#list>
+
+        $.ajax({
+            url: "${host}/api/entity/${entity}/instance",
+            type: 'PUT',
+            dataType: "json",
+            traditional: true,
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                id: idValue,
+            <#list attributes as attribute>
+                ${attribute.name}: ${attribute.name}Value,
+            </#list>
+            }),
+        success: function(result) {
+            //todo alert
+            location.reload();
+        },
+        failure: function(result) {
+            //todo alert
+            console.log(result)
+        }
+    });
+    }
+    $('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
+        checkboxClass: 'icheckbox_minimal-blue',
+        radioClass: 'iradio_minimal-blue'
+    });
+
+    <#list attributes as attribute>
+    <#if attribute.type?lower_case == "date">
+    $('#input${attribute.name}').datepicker({
+        autoclose: true
+    });
+    </#if>
+    </#list>
+
+
+</script>
 </body>
 </html>
