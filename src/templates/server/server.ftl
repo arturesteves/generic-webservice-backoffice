@@ -21,7 +21,8 @@
                 Home
             </h1>
             <ol class="breadcrumb">
-                <li class="active"><a href="/"><i class="fa fa-dashboard"></i> Home</a></li>
+                <li><a href="/"><i class="fa fa-dashboard"></i> Home</a></li>
+                <li class="active"<i class="fa fa-dashboard"></i> ${server}</a></li>
             </ol>
         </section>
 
