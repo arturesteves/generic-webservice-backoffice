@@ -86,7 +86,7 @@ public class Main {
             JSONObject object = (JSONObject)parser.parse(new FileReader(pathFile));
             JSONArray servers = (JSONArray)object.get("servers");
 
-            if(!Main.serverExists(server.getHost(), server.getName(), servers)) {
+            if(!server.getName().equals("") && !server.getHost().equals("") && !Main.serverExists(server.getHost(), server.getName(), servers)) {
                 servers.add(server);
                 // save changes on file
                 FileWriter writer = new FileWriter(pathFile);
@@ -102,10 +102,11 @@ public class Main {
         return false;
     }
 
-    private static void removeServer(String name) {
+    private static boolean removeServer(String name) {
         JSONParser parser = new JSONParser();
+        String filePath = System.getProperty("user.dir") + "/src/utils/server.json";
         try {
-            JSONObject object = (JSONObject)parser.parse(new FileReader(System.getProperty("user.dir") + "/src/utils/server.json"));
+            JSONObject object = (JSONObject)parser.parse(new FileReader(filePath));
             JSONArray servers = (JSONArray)object.get("servers");
             int indexToRemove = -1;
             for(int i = 0; i<servers.size(); i++) {
@@ -118,7 +119,10 @@ public class Main {
                 servers.remove(indexToRemove);
             }
 
-            //todo -- save in file
+            FileWriter writer = new FileWriter(filePath);
+            writer.write((object.toJSONString()).replace("\\/", "/"));
+            writer.flush();
+            writer.close();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (ParseException e) {
@@ -127,7 +131,7 @@ public class Main {
             e.printStackTrace();
         }
 
-
+        return false;
     }
 
     private static String getServerHost(String name) {
@@ -217,7 +221,7 @@ public class Main {
                 return true;
             }
         }
-        // not user found with email and password received
+        // no user found with email and password received
         return false;
     }
 
@@ -238,7 +242,7 @@ public class Main {
             arrayUsers = (JSONArray) jsonServers.get("usersAllowed");
 
             if(arrayUsers == null){
-                // not user registered
+                // no user registered
                 List<JSONObject> listUsers = new ArrayList<>();
                 listUsers.add(newUser);
                 jsonServers.put("usersAllowed", listUsers);
@@ -281,6 +285,21 @@ public class Main {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
+        return null;
+    }
+
+    private static String fetchUserName(String email){
+        JSONObject jsonServers = Main.getServers();
+        JSONArray users = (JSONArray) jsonServers.get("usersAllowed");
+        JSONObject userObject;
+        for (Object user : users) {
+            userObject = ((JSONObject) user);
+            if (userObject.get("email").equals(email)) {
+                // user found
+                return (String) userObject.get("name");
+            }
+        }
+        // no user found with email
         return null;
     }
 
@@ -427,7 +446,9 @@ public class Main {
                 try{
                     JSONObject jsonServers = getServers();
                     Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+                    String userEmail = request.session().attribute("email");
 
+                    model.put("userOnline", fetchUserName(userEmail));
                     model.put("servers", jsonServerWithEntities);
 
                     return engine.render(model, "server/index.ftl");
@@ -447,7 +468,11 @@ public class Main {
             try{
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+                String userEmail = request.session().attribute("email");
 
+                model.put("userOnline", fetchUserName(userEmail));
+                model.put("location", "Add Server");
+                model.put("attributes", new ArrayList<>());
                 model.put("servers", jsonServerWithEntities);
 
                 return engine.render(model, "server/add.ftl");
@@ -460,11 +485,9 @@ public class Main {
         });
 
         post("/server/add", (request, response) -> {
-            Type type = new TypeToken<Map<String, String>>(){}.getType();
-            Map<String, String> map = gson.fromJson(request.body(), type);
-            String serverName = map.get("name");
-            String serverHost = map.get("host");
-            String description = map.get("description");
+            String serverName =request.queryParams("name");
+            String serverHost = request.queryParams("host");
+            String description = request.queryParams("description");
 
             Server server = new Server(serverHost, serverName, description);
             boolean result = Main.addServer(server);
@@ -482,7 +505,9 @@ public class Main {
             try{
                 JSONObject jsonServers = getServers();
                 Object jsonServerWithEntities = getServersWithEntities(jsonServers);
+                String userEmail = request.session().attribute("email");
 
+                model.put("userOnline", fetchUserName(userEmail));
                 model.put("servers", jsonServerWithEntities);
 
                 return engine.render(model, "server/remove.ftl");
@@ -493,6 +518,18 @@ public class Main {
                 return engine.render(null, "500.ftl");
             }
 
+        });
+
+        post("/server/remove", (request, response) -> {
+            String server =request.queryParams("name");
+            boolean result = Main.removeServer(server);
+            if(result){
+                response.redirect("/");
+                return "success";
+            }else{
+                response.status(400);
+                return engine.render(null,"400.ftl");
+            }
         });
 
         get("/server/:server", (request, response) -> {
@@ -515,8 +552,9 @@ public class Main {
                 //Parse the attributes json
                 Type typeEntityList = new TypeToken<List<Entity>>() {}.getType();
                 List<Entity> entities = Main.gson.fromJson(jsonEntityList, typeEntityList);
+                String userEmail = request.session().attribute("email");
 
-
+                model.put("userOnline", fetchUserName(userEmail));
                 model.put("servers", jsonServerWithEntities);
                 model.put("host", host);
                 model.put("server", server);
@@ -530,15 +568,6 @@ public class Main {
                 return engine.render(null, "500.ftl");
             }
 
-        });
-
-        post("/server/remove", (request, response) -> {
-            Type type = new TypeToken<Map<String, String>>(){}.getType();
-            Map<String, String> map = gson.fromJson(request.body(), type);
-            String serverName = map.get("name");
-            Main.removeServer(serverName);
-            response.status(200);
-            return gson.toJson("success");
         });
 
         get("/server/:server/entity/:entity", (request, response) -> {
@@ -572,7 +601,9 @@ public class Main {
                 //Parse the the instances json
                 Type typeInstanceList = new TypeToken<List<Map<String, String>>>() {}.getType();
                 List<Map<String, String>> instances = gson.fromJson(jsonInstanceList, typeInstanceList);
+                String userEmail = request.session().attribute("email");
 
+                model.put("userOnline", fetchUserName(userEmail));
                 model.put("server", server);
                 model.put("host", host);
                 model.put("servers", jsonServerWithEntities);
@@ -614,7 +645,9 @@ public class Main {
                 //Parse the attributes json
                 Type typeAttributesList = new TypeToken<List<Map<String, String>>>() {}.getType();
                 List<Map<String, String>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
+                String userEmail = request.session().attribute("email");
 
+                model.put("userOnline", fetchUserName(userEmail));
                 model.put("server", server);
                 model.put("host", host);
                 model.put("entity", entity);
@@ -662,7 +695,9 @@ public class Main {
                 //Parse the the instances json
                 Type typeInstance = new TypeToken<Map<String, String>>() {}.getType();
                 Map<String, String> instanceMap = gson.fromJson(jsonInstance, typeInstance);
+                String userEmail = request.session().attribute("email");
 
+                model.put("userOnline", fetchUserName(userEmail));
                 model.put("host", host);
                 model.put("servers", jsonServerWithEntities);
                 model.put("entity", entity);

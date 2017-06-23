@@ -50,7 +50,7 @@ public class Server {
         return '{' +
                 "\"name\": \"" + name + "\",\n" +
                 "\"host\": \"" + host + "\",\n" +
-                "\"description=\": \"" + description + "\"\n" +
+                "\"description\": \"" + description + "\"\n" +
                 '}';
     }
 }

@@ -41,7 +41,7 @@
                             <#list servers as server>
                             <div class="col-md-3 col-sm-6 col-xs-12">
                                 <div class="info-box">
-                                    <span class="info-box-icon bg-aqua"><i class="fa fa-server"></i></span>
+                                    <a href="/server/${server.name}"><span class="info-box-icon bg-aqua"><i class="fa fa-server"></i></span></a>
 
                                     <div class="info-box-content">
                                         <span class="info-box-text">Server ${server.name}</span>
@@ -54,6 +54,9 @@
                             </#list>
                         </div>
                         <!-- /.box-body -->
+                        <div class="box-footer">
+                            <a class="btn  btn-primary" href="/server/add"">Add new</a>
+                        </div>
                     </div>
                     <!-- /.box -->
                 </div>
