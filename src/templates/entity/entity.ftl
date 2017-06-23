@@ -99,7 +99,7 @@
                                                 onclick="window.selected = ${instance.id}; window.superEntity = '${instance.superEntity?lower_case}'">Remove
                                         </small>
                                     </td>
-                                    </else>
+                                    <#else>
                                         <td>${entity}</td>
                                     <td><small class="label bg-yellow"  class="btn-link"><a style="color: white" href="${entity?lower_case}/instance/${instance.id}">Edit</a></small> |
                                         <small class="label bg-red" class="btn-link" data-toggle="modal" data-target="#modal-danger"
