@@ -18,11 +18,11 @@
         <!-- Content Header (Page header) -->
         <section class="content-header">
             <h1>
-                Home
+                Entities
             </h1>
             <ol class="breadcrumb">
                 <li><a href="/"><i class="fa fa-dashboard"></i> Home</a></li>
-                <li class="active"<i class="fa fa-dashboard"></i> ${server}</a></li>
+                <li class="active"><i class="fa fa-globe"></i> ${server}</a></li>
             </ol>
         </section>
 
@@ -39,10 +39,10 @@
                         <div class="box-body">
                         <#assign colors = ["bg-green","bg-red","bg-yellow","bg-aqua"]>
                         <#list entities as entity>
-                            <#assign i = (entity?index + 1) % 4   >
+                            <#assign i = (entity?index + 1) % 4 >
                             <div class="col-md-3 col-sm-6 col-xs-12">
                                 <div class="info-box">
-                                    <span class="info-box-icon ${colors[i]}"><i class="fa fa-cube"></i></span>
+                                    <a href="/server/${server}/entity/${entity.name?lower_case}"><span class="info-box-icon ${colors[i]}"><i class="fa fa-cube"></i></span></a>
 
                                     <div class="info-box-content">
                                         <span class="info-box-text">${entity.name}</span>

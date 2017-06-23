@@ -20,12 +20,12 @@
         <!-- Content Header (Page header) -->
         <section class="content-header">
             <h1>
-                500 Error Page
+                401 Error Page
             </h1>
             <ol class="breadcrumb">
                 <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
                 <li><a href="#">Examples</a></li>
-                <li class="active">500 error</li>
+                <li class="active">401 error</li>
             </ol>
         </section>
 
@@ -33,14 +33,14 @@
         <section class="content">
 
             <div class="error-page">
-                <h2 class="headline text-red">500</h2>
+                <h2 class="headline text-red">401</h2>
 
                 <div class="error-content">
                     <h3><i class="fa fa-warning text-red"></i> Oops! Access unauthorized.</h3>
 
                     <p>
                         You don't have authorization to access this resource!
-                        Pelease log in <a href="/index">return to dashboard</a>
+                        Pelease log in <a href="/">return to dashboard</a>.
                     </p>
 
                 </div>
