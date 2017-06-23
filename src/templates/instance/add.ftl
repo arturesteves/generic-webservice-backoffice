@@ -76,7 +76,7 @@
                             <!-- /.box-body -->
 
                             <div class="box-footer">
-                                <button type="submit" class="btn btn-primary" onclick="create()">Submit</button>
+                                <button type="submit" class="btn btn-primary" onclick="create(event)">Submit</button>
                             </div>
                         </form>
                     </div>
@@ -97,7 +97,8 @@
 </div>
 <#include "../scripts.ftl">
 <script>
-    function create() {
+    function create(event) {
+        event.preventDefault();
     <#list attributes as attribute>
         <#if attribute.type?lower_case == "boolean">
         var ${attribute.name}Value = $("#input${attribute.name}").is(':checked');
@@ -119,11 +120,11 @@
         </#if>
     </#list>
 
+
         $.ajax({
             url: "${host}/api/entity/${entity}/instance",
             type: 'POST',
             dataType: "json",
-            traditional: true,
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify({
     <#list attributes as attribute>
@@ -132,7 +133,7 @@
             }),
             success: function (result) {
 
-                location.reload();
+                window.location = "/server/${server}/entity/${entity}";
             },
             failure: function(error) {
                 console.log(error);

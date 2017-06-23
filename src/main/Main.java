@@ -721,7 +721,7 @@ public class Main {
 
         get("*", (request, response) ->{
             Map<String, Object> model = new HashMap<>();
-            String userEmail = request.session().attribute("email") ? request.session().attribute("email") : "";
+            String userEmail = request.session().attribute("email") != null ? request.session().attribute("email") : "";
 
             model.put("userOnline", fetchUserName(userEmail));
             try{

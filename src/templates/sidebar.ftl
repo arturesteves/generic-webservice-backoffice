@@ -63,10 +63,3 @@
     </section>
     <!-- /.sidebar -->
 </aside>
-<script>
-    $("ul li").on("click", function() {
-        $("li").removeClass("active");
-        $(this).addClass("active");
-    });
-
-</script>

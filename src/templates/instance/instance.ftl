@@ -84,7 +84,7 @@
                         <!-- /.box-body -->
 
                         <div class="box-footer">
-                            <button type="submit" class="btn btn-primary" onclick="update()">Update</button>
+                            <button type="submit" class="btn btn-primary" onclick="update(event)">Update</button>
                         </div>
                     </form>
                 </div>
@@ -105,7 +105,8 @@
 </div>
 <#include "../scripts.ftl">
 <script>
-    function update(){
+    function update(event){
+        event.preventDefault();
         var idValue = parseInt($("#inputID").val());
     <#list attributes as attribute>
         <#if attribute.type?lower_case == "boolean">
@@ -142,7 +143,7 @@
             }),
         success: function(result) {
             //todo alert
-            location.reload();
+            window.location = "/server/${server}/entity/${entity}";
         },
         failure: function(result) {
             //todo alert
