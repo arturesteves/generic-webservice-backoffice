@@ -214,13 +214,16 @@ public class Main {
         JSONObject userObject;
         String passwordHash = Main.stringToHash(password, "SHA-256");
 
-        for (Object user : users) {
-            userObject = ((JSONObject) user);
-            if (userObject.get("email").equals(email) && userObject.get("password").equals(passwordHash)) {
-                // user found
-                return true;
+        if(users != null){
+            for (Object user : users) {
+                userObject = ((JSONObject) user);
+                if (userObject.get("email").equals(email) && userObject.get("password").equals(passwordHash)) {
+                    // user found
+                    return true;
+                }
             }
         }
+
         // no user found with email and password received
         return false;
     }
@@ -717,13 +720,17 @@ public class Main {
 
 
         get("*", (request, response) ->{
+            Map<String, Object> model = new HashMap<>();
+            String userEmail = request.session().attribute("email") ? request.session().attribute("email") : "";
+
+            model.put("userOnline", fetchUserName(userEmail));
             try{
-                return engine.render(null, "404.ftl");
+                return engine.render(model, "404.ftl");
 
             }catch(RuntimeException e){
                 System.out.println(e);
                 response.status(500);
-                return engine.render(null, "500.ftl");
+                return engine.render(model, "500.ftl");
             }
         });
     }

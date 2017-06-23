@@ -1,10 +1,31 @@
 {
-  "servers":
-  [
+  "servers": [
     {
-      "name":"Localhost",
-      "host":"http://localhost:8000",
-      "description":"A localhost server for testing"
+      "name": "Localhost",
+      "host": "http://localhost:8000",
+      "description": "A localhost server for testing"
+    },
+    {
+      "name": "SERVER ARTUR",
+      "host": "http://localhost:5001",
+      "description": "Sample server for testing only"
+    },
+    {
+      "name": "Artur Esteves",
+      "host": "http://localhost:5000",
+      "description": "Sample server for testing only"
+    }
+  ],
+  "usersAllowed": [
+    {
+      "password": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+      "name": "Artur Esteves",
+      "email": "arturmesteves@hotmail.com"
+    },
+    {
+      "password": "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+      "name": "Ricardo Es",
+      "email": "rc@hotmail.com"
     }
   ]
 }
