@@ -20,8 +20,8 @@
             </h1>
             <ol class="breadcrumb">
                 <li><a href="/"><i class="fa fa-dashboard"></i> Home</a></li>
-                <li><a href="/server/${server}"><i class="fa fa-dashboard"></i> ${server}</a></li>
-                <li class="active"><i class="fa fa-dashboard"></i> ${entity}</li>
+                <li><a href="/server/${server}"><i class="fa fa-globe"></i> ${server}</a></li>
+                <li class="active"><i class="fa fa-cube"></i> ${entity}</li>
             </ol>
         </section>
 
@@ -91,12 +91,24 @@
                                             <td>null</td>
                                         </#if>
                                     </#list>
+                                    <#if instance.superEntity??>
                                     <td>${instance.superEntity}</td>
+
                                     <td><small class="label bg-yellow"  class="btn-link"><a style="color: white" href="${instance.superEntity?lower_case}/instance/${instance.id}">Edit</a></small> |
                                         <small class="label bg-red" class="btn-link" data-toggle="modal" data-target="#modal-danger"
                                                 onclick="window.selected = ${instance.id}; window.superEntity = '${instance.superEntity?lower_case}'">Remove
                                         </small>
                                     </td>
+                                    </else>
+                                        <td>${entity}</td>
+                                    <td><small class="label bg-yellow"  class="btn-link"><a style="color: white" href="${entity?lower_case}/instance/${instance.id}">Edit</a></small> |
+                                        <small class="label bg-red" class="btn-link" data-toggle="modal" data-target="#modal-danger"
+                                               onclick="window.selected = ${instance.id}; window.superEntity = '${entity?lower_case}'">Remove
+                                        </small>
+                                    </td>
+
+                                </#if>
+
 
                                 </tr>
                                 </#list>
