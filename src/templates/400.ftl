@@ -21,7 +21,7 @@
         <!-- Content Header (Page header) -->
         <section class="content-header">
             <h1>
-                404 Error Page
+                400 Error Page
             </h1>
             <ol class="breadcrumb">
                 <li><a href="#"><i class="fa fa-dashboard"></i> Home</a></li>
@@ -40,7 +40,7 @@
 
                     <p>
                         We could not process your request.
-                        Meanwhile, you may <a href="/server/index.html">return to dashboard</a> or try using the search form.
+                        Meanwhile, you may <a href="/">return to dashboard</a>.
                     </p>
 
                 </div>

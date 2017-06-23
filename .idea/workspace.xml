@@ -5,11 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="b04dc599-da1c-4be2-9a39-99302a22fc2b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/Main.java" afterPath="$PROJECT_DIR$/src/main/Main.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/entity/entity.ftl" afterPath="$PROJECT_DIR$/src/templates/entity/entity.ftl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/instance/add.ftl" afterPath="$PROJECT_DIR$/src/templates/instance/add.ftl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/instance/instance.ftl" afterPath="$PROJECT_DIR$/src/templates/instance/instance.ftl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/scripts.ftl" afterPath="$PROJECT_DIR$/src/templates/scripts.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main/Server.java" afterPath="$PROJECT_DIR$/src/main/Server.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/400.ftl" afterPath="$PROJECT_DIR$/src/templates/400.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/401.ftl" afterPath="$PROJECT_DIR$/src/templates/401.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/404.ftl" afterPath="$PROJECT_DIR$/src/templates/404.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/500.ftl" afterPath="$PROJECT_DIR$/src/templates/500.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/authenticate.ftl" afterPath="$PROJECT_DIR$/src/templates/authenticate.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/control.ftl" afterPath="$PROJECT_DIR$/src/templates/control.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/header.ftl" afterPath="$PROJECT_DIR$/src/templates/header.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/server/add.ftl" afterPath="$PROJECT_DIR$/src/templates/server/add.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/server/index.ftl" afterPath="$PROJECT_DIR$/src/templates/server/index.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/server/server.ftl" afterPath="$PROJECT_DIR$/src/templates/server/server.ftl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/templates/sidebar.ftl" afterPath="$PROJECT_DIR$/src/templates/sidebar.ftl" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -813,16 +820,16 @@
       <workItem from="1498039831867" duration="14246000" />
       <workItem from="1498073912050" duration="16329000" />
       <workItem from="1498138767234" duration="8072000" />
-      <workItem from="1498156992415" duration="11961000" />
+      <workItem from="1498156992415" duration="12018000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="50608000" />
+    <option name="totallyTimeSpent" value="50665000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1378" height="744" extended-state="0" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
