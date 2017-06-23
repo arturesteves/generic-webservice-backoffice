@@ -56,8 +56,13 @@
                                         <#break>
                                     <#case "association">
                                         <div class="form-group">
-                                            <select id="select${attribute.name}" class="form-control select2" multiple="multiple" data-placeholder="Select a ${attribute.entity}" style="width: 100%;">
-                                            </select>
+                                            <#if attribute.maxOccurs == "*">
+                                                <select id="select${attribute.name}" class="form-control select2" multiple="multiple" data-placeholder="Select a ${attribute.entity}" style="width: 100%;">
+                                                </select>
+                                            <#else>
+                                                <select id="select${attribute.name}" class="form-control select"  data-placeholder="Select a ${attribute.entity}" style="width: 100%;">
+                                                </select>
+                                            </#if>
                                         </div>
                                         <#break>
                                     <#default>
@@ -95,16 +100,22 @@
     function create() {
     <#list attributes as attribute>
         <#if attribute.type?lower_case == "boolean">
-            var ${attribute.name}Value = $("#input${attribute.name}").is(':checked');
-        <#elseif attribute.type?lower_case == "integer">
-            var ${attribute.name}Value = parseInt($("#input${attribute.name}").val());
+        var ${attribute.name}Value = $("#input${attribute.name}").is(':checked');
+        <#elseif attribute.type?lower_case == "integer" || attribute.type?lower_case == "int">
+        var ${attribute.name}Value = parseInt($("#input${attribute.name}").val());
         <#elseif attribute.type?lower_case == "date">
-            var ${attribute.name}Value = new Date($("#input${attribute.name}").val()).toISOString();
+        var ${attribute.name}Value = new Date($("#input${attribute.name}").val()).toISOString();
+        <#elseif attribute.type?lower_case == "double">
+        var ${attribute.name}Value = parseFloat($("#input${attribute.name}").val());
         <#elseif attribute.type?lower_case == "association">
-            var ${attribute.name}Value = $("#select${attribute.name}").select2("val");
-            ${attribute.name}Value = ${attribute.name}Value.map(function(v){ return parseInt(v);});
+            <#if attribute.maxOccurs == "*">
+        var ${attribute.name}Value = $("#select${attribute.name}").select2("val") || [];
+        ${attribute.name}Value = ${attribute.name}Value.map(function(v){ return parseInt(v);});
+            <#else>
+        var ${attribute.name}Value = parseInt($("#select${attribute.name}").val() || null);
+            </#if>
         <#else>
-            var ${attribute.name}Value = $("#input${attribute.name}").val();
+        var ${attribute.name}Value = $("#input${attribute.name}").val();
         </#if>
     </#list>
 
@@ -116,14 +127,17 @@
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify({
     <#list attributes as attribute>
-    ${attribute.name}:
-        ${attribute.name}Value,
+                 ${attribute.name}: ${attribute.name}Value,
     </#list>
-    }),
-        success: function (result) {
+            }),
+            success: function (result) {
 
-            location.reload();
-            }});
+                location.reload();
+            },
+            failure: function(error) {
+                console.log(error);
+            }
+        });
     }
 
     $(".select2").select2();

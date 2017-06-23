@@ -58,7 +58,8 @@
                         </div>
                         <!-- /.box-header -->
                         <div class="box-body">
-                            <table id="example2" class="table table-bordered table-striped">
+
+                            <table id="example2" class="table table-bordered table-striped dt-responsive">
                                 <thead>
                                 <tr>
                                     <th>id</th>
@@ -74,17 +75,27 @@
                                 <tr>
                                     <td>${instance.id}</td>
                                     <#list attributes as attribute>
-                                        <#if instance[attribute.name]??>
+                                        <#if instance[attribute.name]?? >
+                                            <#if !(attribute.type == "association") && !instance[attribute.name]?is_string>
+                                            <td>${instance[attribute.name]?c}</td>
+                                            <#elseif !(attribute.type == "association")>
                                             <td>${instance[attribute.name]}</td>
+                                            <#elseif attribute.type == "association" && attribute.maxOccurs == "*">
+                                            <td><#list instance[attribute.name] as instance>
+                                                <small class="label bg-blue">${instance}</small><#sep> </#sep>
+                                            </#list></td>
+                                            <#else>
+                                            <td><small class="label bg-blue">${(instance[attribute.name]??)?then(instance[attribute.name], "")}</small></td>
+                                            </#if>
                                         <#else>
                                             <td>null</td>
                                         </#if>
                                     </#list>
                                     <td>${instance.superEntity}</td>
-                                    <td><a href="${instance.superEntity?lower_case}/instance/${instance.id}">Edit</a> |
-                                        <button class="btn-link" data-toggle="modal" data-target="#modal-danger"
+                                    <td><small class="label bg-yellow"  class="btn-link"><a style="color: white" href="${instance.superEntity?lower_case}/instance/${instance.id}">Edit</a></small> |
+                                        <small class="label bg-red" class="btn-link" data-toggle="modal" data-target="#modal-danger"
                                                 onclick="window.selected = ${instance.id}; window.superEntity = '${instance.superEntity?lower_case}'">Remove
-                                        </button>
+                                        </small>
                                     </td>
 
                                 </tr>
@@ -101,6 +112,7 @@
                                 </tr>
                                 </tfoot>
                             </table>
+
                         </div>
                         <!-- /.box-body -->
                         <div class="box-footer">
@@ -126,8 +138,12 @@
 <script>
 
     $(function () {
-        $("#example2").DataTable();
+        var table = $("#example2").DataTable({
+
+        });
     });
+
+
 
     //    $('#modal-danger').modal()
     function remove(selectedId, entity) {
@@ -136,7 +152,6 @@
             url: "${host}/api/entity/" + entity + "/instance/" + selectedId,
             type: 'DELETE',
             success: function (result) {
-
                 location.reload();
             }
         });

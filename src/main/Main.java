@@ -566,12 +566,12 @@ public class Main {
                         "/instance" , "");
 
                 //Parse the attributes json
-                Type typeAttributesList = new TypeToken<List<Map<String, String>>>() {}.getType();
-                List<Map<String, String>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
+                Type typeAttributesList = new TypeToken<List<Map<String, Object>>>() {}.getType();
+                List<Map<String, Object>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
 
                 //Parse the the instances json
-                Type typeInstanceList = new TypeToken<List<Map<String, String>>>() {}.getType();
-                List<Map<String, String>> instances = gson.fromJson(jsonInstanceList, typeInstanceList);
+                Type typeInstanceList = new TypeToken<List<Map<String, Object>>>() {}.getType();
+                List<Map<String, Object>> instances = gson.fromJson(jsonInstanceList, typeInstanceList);
 
                 model.put("server", server);
                 model.put("host", host);
@@ -656,12 +656,12 @@ public class Main {
                         "/instance/" + instance , "");
 
                 //Parse the attributes json
-                Type typeAttributesList = new TypeToken<List<Map<String, String>>>() {}.getType();
-                List<Map<String, String>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
+                Type typeAttributesList = new TypeToken<List<Map<String, Object>>>() {}.getType();
+                List<Map<String, Object>> attributes = Main.gson.fromJson(jsonAttributeList, typeAttributesList);
 
                 //Parse the the instances json
-                Type typeInstance = new TypeToken<Map<String, String>>() {}.getType();
-                Map<String, String> instanceMap = gson.fromJson(jsonInstance, typeInstance);
+                Type typeInstance = new TypeToken<Map<String, Object>>() {}.getType();
+                Map<String, Object> instanceMap = gson.fromJson(jsonInstance, typeInstance);
 
                 model.put("host", host);
                 model.put("servers", jsonServerWithEntities);
