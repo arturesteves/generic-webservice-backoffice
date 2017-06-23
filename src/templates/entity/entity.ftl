@@ -38,7 +38,8 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline pull-left" data-dismiss="modal">Close</button>
-                        <button onclick="remove(window.selected)") type="button" class="btn btn-outline">Remove</button>
+                        <button onclick="remove(window.selected, window.superEntity)" ) type="button" class="btn btn-outline">Remove
+                        </button>
                     </div>
                 </div>
                 <!-- /.modal-content -->
@@ -61,9 +62,9 @@
                                 <thead>
                                 <tr>
                                     <th>id</th>
-                                    <#list attributes as attribute>
-                                    <th>${attribute.name}</th>
-                                    </#list>
+                                <#list attributes as attribute>
+                                    <th>${(attribute.displayName??)?then(attribute.displayName, attribute.name)}</th>
+                                </#list>
                                     <th>type</th>
                                     <th>action</th>
                                 </tr>
@@ -74,17 +75,19 @@
                                     <td>${instance.id}</td>
                                     <#list attributes as attribute>
                                         <#if instance[attribute.name]??>
-                                    <td>${instance[attribute.name]}</td>
+                                            <td>${instance[attribute.name]}</td>
                                         <#else>
-                                    <td>null</td>
+                                            <td>null</td>
                                         </#if>
                                     </#list>
                                     <#if instance.superEntity??>
                                     <td>${instance.superEntity}</td>
+
                                     <td><a href="${instance.superEntity?lower_case}/instance/${instance.id}">Edit</a> | <button class="btn-link" data-toggle="modal" data-target="#modal-danger" onclick="window.selected = ${instance.id}">Remove</button></td>
                                     <#else>
                                         <td><a href="${entity?lower_case}/instance/${instance.id}">Edit</a> | <button class="btn-link" data-toggle="modal" data-target="#modal-danger" onclick="window.selected = ${instance.id}">Remove</button></td>
                                     </#if>
+
                                 </tr>
                                 </#list>
                                 </tbody>
@@ -92,7 +95,7 @@
                                 <tr>
                                     <th>id</th>
                                 <#list attributes as attribute>
-                                    <th>${attribute.name}</th>
+                                    <th>${(attribute.displayName??)?then(attribute.displayName, attribute.name)}</th>
                                 </#list>
                                     <th>type</th>
                                     <th>action</th>
@@ -127,13 +130,13 @@
         $("#example2").DataTable();
     });
 
-//    $('#modal-danger').modal()
-    function remove(selectedId) {
+    //    $('#modal-danger').modal()
+    function remove(selectedId, entity) {
 
         $.ajax({
-            url: "${host}/api/entity/${entity}/instance/"+ selectedId,
+            url: "${host}/api/entity/" + entity + "/instance/" + selectedId,
             type: 'DELETE',
-            success: function(result) {
+            success: function (result) {
 
                 location.reload();
             }

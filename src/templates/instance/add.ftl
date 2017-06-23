@@ -47,15 +47,23 @@
 
                                 <div class="form-group">
 
-                                    <label for="input${attribute.name}">${attribute.name}</label>
-                                    <#if attribute.type?lower_case == "boolean">
-                                    <div style="display: block">
-                                    <input id="input${attribute.name}" type="checkbox" class="minimal">
-                                    </div>
-                                    <#else>
-                                    <input type="text" class="form-control" id="input${attribute.name}" value=""
-                                           placeholder="${attribute.name}">
-                                    </#if>
+                                    <label for="input${attribute.name}">${(attribute.displayName??)?then(attribute.displayName, attribute.name)}</label>
+                                <#switch attribute.type?lower_case>
+                                    <#case "boolean">
+                                        <div style="display: block">
+                                            <input id="input${attribute.name}" type="checkbox" class="minimal">
+                                        </div>
+                                        <#break>
+                                    <#case "association">
+                                        <div class="form-group">
+                                            <select id="select${attribute.name}" class="form-control select2" multiple="multiple" data-placeholder="Select a ${attribute.entity}" style="width: 100%;">
+                                            </select>
+                                        </div>
+                                        <#break>
+                                    <#default>
+                                        <input type="text" class="form-control" id="input${attribute.name}" value=""
+                                               placeholder="${attribute.name}">
+                                </#switch>
                                 </div>
                             </#list>
 
@@ -90,6 +98,11 @@
             var ${attribute.name}Value = $("#input${attribute.name}").is(':checked');
         <#elseif attribute.type?lower_case == "integer">
             var ${attribute.name}Value = parseInt($("#input${attribute.name}").val());
+        <#elseif attribute.type?lower_case == "date">
+            var ${attribute.name}Value = new Date($("#input${attribute.name}").val()).toISOString();
+        <#elseif attribute.type?lower_case == "association">
+            var ${attribute.name}Value = $("#select${attribute.name}").select2("val");
+            ${attribute.name}Value = ${attribute.name}Value.map(function(v){ return parseInt(v);});
         <#else>
             var ${attribute.name}Value = $("#input${attribute.name}").val();
         </#if>
@@ -110,10 +123,10 @@
         success: function (result) {
 
             location.reload();
-        }
-    })
-        ;
+            }});
     }
+
+    $(".select2").select2();
 
     $('input[type="checkbox"].minimal, input[type="radio"].minimal').iCheck({
         checkboxClass: 'icheckbox_minimal-blue',
@@ -122,12 +135,32 @@
 
 
     <#list attributes as attribute>
-        <#if attribute.type?lower_case == "date">
-        $('#input${attribute.name}').datepicker({
-            autoclose: true
-        });
-        </#if>
+        <#switch attribute.type?lower_case>
+            <#case "date">
+    $('#input${attribute.name}').datepicker({
+        autoclose: true
+    });
+                <#break>
+            <#case "association">
+    $.ajax({
+        url: "${host}/api/entity/${attribute.entity?lower_case}/instance",
+        type: 'GET',
+        traditional: true,
+        contentType: "application/json; charset=utf-8",
+        success: function (result) {
+            result.forEach(function(instance) {
+                $("#select${attribute.name}").append($('<option>', {
+                    value: instance.id,
+                    text: instance.displayName || JSON.stringify(instance)
+                }));
+            })
+            console.log(result);
+        }});
+
+                <#break>
+        </#switch>
     </#list>
+
 
 
 </script>
